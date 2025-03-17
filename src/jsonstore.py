@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from board import Board
     from board_list import BoardList
-    from user import User
+    from user import User 
     from item import Item
 
 from data_store import DataStore
@@ -31,7 +31,10 @@ class JSONStore(DataStore):
 
     def set_current_user(self, user):
         self.current_user = user
-        print(f"Usuário definido: {user['name']}")
+        if user is not None:
+            print(f"Usuário definido: {user['name']}")
+        else:
+            print("Usuário removido (logout)")
 
     def _get_current_user(self):
         if self.current_user:

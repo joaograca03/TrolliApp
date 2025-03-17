@@ -10,28 +10,19 @@ os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
 class TrelloApp(AppLayout):
     def __init__(self, page: ft.Page, store: DataStore):
-        self.page: ft.Page = page
-        self.store: DataStore = store
+        self.page = page  # Armazena a referência diretamente
+        self.store = store
         self.user: str | None = None  # Nome do usuário logado
         self.boards = []
 
-        # Configuração da página
-        self.page.title = "Flet Trello clone"
-        self.page.padding = 0
-        self.page.theme = ft.Theme(font_family="Verdana")
-        self.page.theme_mode = ft.ThemeMode.LIGHT
-        self.page.theme.page_transitions.windows = "cupertino"
-        self.page.fonts = {"Pacifico": "Pacifico-Regular.ttf"}
-        self.page.bgcolor = ft.Colors.BLUE_GREY_200
-        self.page.on_route_change = self.route_change
-
-        # Configuração da appbar
-        self.login_profile_button = ft.PopupMenuItem(text="Log in", on_click=self.login)
+        # Define appbar_items antes de qualquer uso
         self.appbar_items = [
-            self.login_profile_button,
+            ft.PopupMenuItem(text="Log in", on_click=self.login),
             ft.PopupMenuItem(),  # divisor
             ft.PopupMenuItem(text="Settings"),
         ]
+
+        # Configuração inicial da AppBar
         self.appbar = ft.AppBar(
             leading=ft.Icon(ft.Icons.GRID_GOLDENRATIO_ROUNDED),
             leading_width=100,
@@ -51,9 +42,8 @@ class TrelloApp(AppLayout):
                 )
             ],
         )
-        self.page.appbar = self.appbar
 
-        # Inicializa o AppLayout (que contém o Sidebar)
+        # Inicializa o AppLayout
         super().__init__(
             self,
             self.page,
@@ -63,7 +53,31 @@ class TrelloApp(AppLayout):
             vertical_alignment=ft.CrossAxisAlignment.START,
         )
 
-        # Adiciona a interface principal à página
+        # Configuração inicial da página
+        self.page.title = "Flet Trello clone"
+        self.page.padding = 0
+        self.page.theme = ft.Theme(font_family="Verdana")
+        self.page.theme_mode = ft.ThemeMode.LIGHT
+        self.page.theme.page_transitions.windows = "cupertino"
+        self.page.fonts = {"Pacifico": "Pacifico-Regular.ttf"}
+        self.page.bgcolor = ft.Colors.BLUE_GREY_200
+        self.page.on_route_change = self.route_change
+        self.page.appbar = self.appbar
+
+        print("Inicializando TrelloApp, self.page:", self.page)
+
+        # Configura a tela de login inicial
+        self.initialize_login()
+
+    def initialize_login(self):
+        """Configura a tela de login."""
+        print("Configurando tela de login, self.page:", self.page)
+        self.appbar_items = [
+            ft.PopupMenuItem(text="Log in", on_click=self.login),
+            ft.PopupMenuItem(),  # divisor
+            ft.PopupMenuItem(text="Settings"),
+        ]
+        self.appbar.actions[0].content = ft.PopupMenuButton(items=self.appbar_items)
         self.page.views.clear()
         self.page.views.append(
             ft.View(
@@ -98,13 +112,17 @@ class TrelloApp(AppLayout):
                 print(f"Usuário definido: {self.user}")
                 self.page.client_storage.set("current_user", user_name.value)
                 self.store.set_current_user(user)
-                self.boards = self.store.get_boards()  # Carrega as boards do usuário logado
+                self.boards = self.store.get_boards()
                 print(f"Boards encontrados: {self.boards}")
                 self.page.close(dialog)
-                self.appbar_items[0] = ft.PopupMenuItem(text=f"{self.user}'s Profile")
-
-                # Adiciona a view de boards e atualiza a página
-                self.page.views.clear()  # Limpa a view de login
+                self.appbar_items = [
+                    ft.PopupMenuItem(text=f"{self.user}'s Profile"),
+                    ft.PopupMenuItem(),  # divisor
+                    ft.PopupMenuItem(text="Settings"),
+                    ft.PopupMenuItem(text="Logout", on_click=self.logout),
+                ]
+                self.appbar.actions[0].content = ft.PopupMenuButton(items=self.appbar_items)
+                self.page.views.clear()
                 self.page.views.append(
                     ft.View(
                         "/boards",
@@ -113,18 +131,18 @@ class TrelloApp(AppLayout):
                         bgcolor=ft.Colors.BLUE_GREY_200,
                     )
                 )
-                self.page.update()  # Garante que a view esteja registrada
-
-                # Agora atualiza a visualização das boards
+                self.page.update()
                 self.hydrate_all_boards_view()
                 self.sidebar.sync_board_destinations()
                 if len(self.boards) == 0:
                     self.create_new_board("My First Board")
-                self.page.go("/boards")
+                self.page.route = "/boards"
+                self.page.update()
             else:
                 user_name.error_text = "Usuário ou senha inválidos"
                 self.page.update()
 
+        print("Tentando abrir modal de login, self.page:", self.page)
         user_name = ft.TextField(label="Nome de usuário")
         password = ft.TextField(label="Senha", password=True)
         dialog = ft.AlertDialog(
@@ -141,23 +159,60 @@ class TrelloApp(AppLayout):
         )
         self.page.open(dialog)
 
-    def route_change(self, e):
-        troute = ft.TemplateRoute(self.page.route)
+    def logout(self, e):
+        print(f"Logout do usuário: {self.user}, self.page antes do logout:", self.page)
+        self.user = None
+        self.page.client_storage.remove("current_user")
+        self.store.set_current_user(None)
+        self.boards = []
+        self.appbar_items = [
+            ft.PopupMenuItem(text="Log in", on_click=self.login),
+            ft.PopupMenuItem(),  # divisor
+            ft.PopupMenuItem(text="Settings"),
+        ]
+        self.appbar.actions[0].content = ft.PopupMenuButton(items=self.appbar_items)
         
-        # Se não houver usuário logado, força o redirecionamento para /login
-        if not self.user:
-            if troute.route != "/login":
-                self.page.go("/login")
+        # Redireciona para a tela de login
+        self.page.views.clear()
+        self.page.views.append(
+            ft.View(
+                "/login",
+                [
+                    ft.Column(
+                        [
+                            ft.Text("Bem-vindo ao Trolli", size=30, font_family="Pacifico"),
+                            ft.ElevatedButton("Fazer Login", on_click=self.login),
+                        ],
+                        alignment=ft.MainAxisAlignment.CENTER,
+                        horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                    )
+                ],
+                bgcolor=ft.Colors.BLUE_GREY_200,
+            )
+        )
+        self.page.route = "/login"
+        self.page.update()
+        print("Após logout, self.page:", self.page)
+
+    def route_change(self, e):
+        if self.page is None:
+            print("Erro: self.page é None no route_change")
+            return
+        troute = ft.TemplateRoute(self.page.route)
+        print(f"Route change para: {troute.route}, self.page:", self.page)
+        
+        if not self.user and troute.route != "/login":
+            self.page.route = "/login"
+            self.page.update()
             return
 
-        # Rotas permitidas apenas após login
         if troute.match("/"):
-            self.page.go("/boards")
+            self.page.route = "/boards"
         elif troute.match("/board/:id"):
             if int(troute.id) >= len(self.store.get_boards()):
-                self.page.go("/boards")
-                return
-            self.set_board_view(int(troute.id))
+                self.page.route = "/boards"
+            else:
+                self.set_board_view(int(troute.id))
         elif troute.match("/boards"):
             self.set_all_boards_view()
         elif troute.match("/members"):
@@ -226,7 +281,7 @@ class TrelloApp(AppLayout):
 def main(page: ft.Page):
     store = JSONStore(app=None, page=page)
     app = TrelloApp(page, store)
-    store.app = app  # Define o app no store após a criação
+    store.app = app
     page.add(app)
 
 print("flet version: ", ft.version.version)

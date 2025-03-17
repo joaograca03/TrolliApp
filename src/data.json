@@ -37,7 +37,7 @@
                                 {
                                     "id": 3,
                                     "item_text": "aaa",
-                                    "priority": "Média",
+                                    "priority": "M\u00c3\u00a9dia",
                                     "description": "aa",
                                     "completed": false
                                 }
@@ -95,7 +95,7 @@
                                     "id": 1,
                                     "item_text": "Estudar para o exame",
                                     "priority": "Alta",
-                                    "description": "Revisar capítulos 1 a 5",
+                                    "description": "Revisar cap\u00c3\u00adtulos 1 a 5",
                                     "completed": false
                                 }
                             ]
@@ -108,7 +108,7 @@
                                 {
                                     "id": 2,
                                     "item_text": "Projeto de CM",
-                                    "priority": "Média",
+                                    "priority": "M\u00c3\u00a9dia",
                                     "description": "Finalizar o Trello",
                                     "completed": false
                                 }
