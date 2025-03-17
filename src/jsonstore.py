@@ -165,6 +165,7 @@ class JSONStore(DataStore):
                             "item_text": item.item_text,
                             "priority": item.priority,
                             "description": item.description,
+                            "tags": item.tags,  # Adiciona as tags ao JSON
                             "completed": item.completed
                         })
                         self._save_data()

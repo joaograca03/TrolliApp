@@ -34,6 +34,8 @@ class BoardList(ft.Container):
                 store=self.store,
                 item_text=item_data["item_text"],
                 priority=item_data["priority"],
+                description=item_data["description"],
+                tags=item_data.get("tags", []),
                 item_id=item_data["id"],
                 completed=item_data["completed"]
             )
@@ -48,7 +50,7 @@ class BoardList(ft.Container):
                 ), new_item])
             )
 
-        # Filtros de prioridade e status
+        # Filtros de prioridade, estado e tags
         self.priority_filter = ft.Dropdown(
             options=[
                 ft.dropdown.Option("Todas"),
@@ -74,20 +76,29 @@ class BoardList(ft.Container):
             on_change=self.apply_filters,
         )
 
-        # Painel expansível para os filtros dentro de um ExpansionPanelList
+        # Botão para abrir o diálogo de seleção de tags
+        self.tags_filter_button = ft.ElevatedButton(
+            text="Selecionar Tags",
+            on_click=self.open_tags_filter_dialog,
+            width=150,
+            bgcolor=ft.Colors.BLUE_200,
+            color=ft.Colors.BLACK,
+        )
+        self.selected_tags = []  # Lista para armazenar as tags selecionadas
+
         self.filter_panel = ft.ExpansionPanelList(
             controls=[
                 ft.ExpansionPanel(
                     header=ft.ListTile(title=ft.Text("Filtros")),
                     content=ft.Column(
-                        controls=[self.priority_filter, self.status_filter],
+                        controls=[self.priority_filter, self.status_filter, self.tags_filter_button],
                         spacing=10,
                     ),
-                    expanded=False,  
+                    expanded=False,
                 )
             ],
-            elevation=0,  
-            divider_color=ft.Colors.TRANSPARENT,  
+            elevation=0,
+            divider_color=ft.Colors.TRANSPARENT,
         )
 
         self.create_task_button = ft.ElevatedButton(
@@ -164,8 +175,8 @@ class BoardList(ft.Container):
             content=ft.Column(
                 [
                     self.header,
-                    self.filter_panel,  # Painel com filtros dentro de ExpansionPanelList
-                    self.create_task_button,  # Botão para criar nova tarefa
+                    self.filter_panel,
+                    self.create_task_button,
                     self.items,
                     self.end_indicator,
                 ],
@@ -207,20 +218,75 @@ class BoardList(ft.Container):
             self.inner_list.bgcolor = self.color if self.color else ft.Colors.BACKGROUND
         self.update()
 
+    def get_all_tags(self):
+        # Recolhe todas as tags únicas da lista
+        all_tags = set()
+        for item_control in self.items.controls:
+            item = item_control.controls[1]
+            all_tags.update(item.tags)
+        return sorted(all_tags)
+
+    def open_tags_filter_dialog(self, e):
+        # Cria um diálogo para selecionar tags
+        all_tags = self.get_all_tags()
+        if not all_tags:
+            self.page.snack_bar = ft.SnackBar(ft.Text("Nenhuma tag disponível nesta lista."), open=True)
+            self.page.update()
+            return
+
+        tag_checkboxes = {
+            tag: ft.Checkbox(
+                label=tag,
+                value=tag in self.selected_tags,
+                on_change=self.update_selected_tags
+            ) for tag in all_tags
+        }
+
+        def apply_tags_filter(e):
+            self.selected_tags = [tag for tag, cb in tag_checkboxes.items() if cb.value]
+            self.apply_filters(None)
+            self.page.close(dialog)
+
+        dialog = ft.AlertDialog(
+            title=ft.Text("Selecionar Tags"),
+            content=ft.Column(
+                controls=list(tag_checkboxes.values()),
+                scroll=ft.ScrollMode.AUTO,
+                height=200,
+            ),
+            actions=[
+                ft.ElevatedButton("Aplicar", on_click=apply_tags_filter),
+                ft.ElevatedButton("Cancelar", on_click=lambda e: self.page.close(dialog)),
+            ],
+            actions_alignment=ft.MainAxisAlignment.END,
+        )
+        self.page.open(dialog)
+
+    def update_selected_tags(self, e):
+        # Atualiza a lista de tags selecionadas dinamicamente (opcional, para feedback imediato)
+        pass
+
     def apply_filters(self, e):
         for item_control in self.items.controls:
             item = item_control.controls[1]
             item_visible = True
 
+            # Filtro por prioridade
             if self.priority_filter.value != "Todas":
                 if item.priority != self.priority_filter.value:
                     item_visible = False
 
+            # Filtro por estado
             if self.status_filter.value != "Todas":
                 is_completed = item.checkbox.value
                 if self.status_filter.value == "Concluídas" and not is_completed:
                     item_visible = False
                 elif self.status_filter.value == "Não Concluídas" and is_completed:
+                    item_visible = False
+
+            # Filtro por tags
+            if self.selected_tags:  # Só aplica se houver tags selecionadas
+                if not any(tag in item.tags for tag in self.selected_tags):
                     item_visible = False
 
             item_control.visible = item_visible
@@ -233,6 +299,7 @@ class BoardList(ft.Container):
             item_text=src.data.item_text,
             priority=src.data.priority,
             description=src.data.description,
+            tags=src.data.tags,
             completed=src.data.completed
         )
         src.data.list.remove_item(src.data)
@@ -287,8 +354,7 @@ class BoardList(ft.Container):
         self.update()
 
     def open_create_task_modal(self, e):
-        # Campos do modal
-        task_name_field = ft.TextField(label="Task Name", width=200)
+        task_name_field = ft.TextField(label="Nome da Tarefa", width=200)
         priority_dropdown = ft.Dropdown(
             options=[
                 ft.dropdown.Option("Baixa"),
@@ -296,24 +362,30 @@ class BoardList(ft.Container):
                 ft.dropdown.Option("Alta"),
             ],
             value="Baixa",
-            label="Priority",
+            label="Prioridade",
             width=200,
         )
         description_field = ft.TextField(
-            label="Description",
+            label="Descrição",
             multiline=True,
             min_lines=3,
             max_lines=5,
             width=200,
         )
-        completed_checkbox = ft.Checkbox(label="Completed", value=False)
+        tags_field = ft.TextField(
+            label="Tags (separadas por vírgula)",
+            width=200,
+        )
+        completed_checkbox = ft.Checkbox(label="Concluída", value=False)
 
         def close_modal(e):
-            if task_name_field.value:  # Só cria se o nome estiver preenchido
+            if task_name_field.value:
+                tags = [tag.strip() for tag in tags_field.value.split(",") if tag.strip()]
                 self.add_item(
                     item_text=task_name_field.value,
                     priority=priority_dropdown.value,
                     description=description_field.value,
+                    tags=tags,
                     completed=completed_checkbox.value
                 )
             self.page.close(modal)
@@ -323,23 +395,24 @@ class BoardList(ft.Container):
             self.page.update()
 
         create_button = ft.ElevatedButton(
-            text="Create",
+            text="Criar",
             bgcolor=ft.Colors.BLUE_200,
             on_click=close_modal,
             disabled=True,
         )
 
         modal = ft.AlertDialog(
-            title=ft.Text("Create New Task"),
+            title=ft.Text("Criar Nova Tarefa"),
             content=ft.Column(
                 [
                     task_name_field,
                     priority_dropdown,
                     description_field,
+                    tags_field,
                     completed_checkbox,
                     ft.Row(
                         [
-                            ft.ElevatedButton(text="Cancel", on_click=lambda e: self.page.close(modal)),
+                            ft.ElevatedButton(text="Cancelar", on_click=lambda e: self.page.close(modal)),
                             create_button,
                         ],
                         alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
@@ -352,7 +425,7 @@ class BoardList(ft.Container):
         )
 
         self.page.open(modal)
-        task_name_field.on_change = validate_fields  # Validação em tempo real
+        task_name_field.on_change = validate_fields
         task_name_field.focus()
 
     def add_item(
@@ -360,6 +433,7 @@ class BoardList(ft.Container):
         item_text: str | None = None,
         priority: str = "Baixa",
         description: str = "",
+        tags: list[str] = None,
         completed: bool = False,
         chosen_control: ft.Draggable | None = None,
         swap_control: ft.Draggable | None = None,
@@ -396,6 +470,7 @@ class BoardList(ft.Container):
                 item_text,
                 priority,
                 description,
+                tags=tags,
                 completed=completed
             )
             control_to_add.controls.append(new_item)
@@ -407,6 +482,7 @@ class BoardList(ft.Container):
                 item_text,
                 priority,
                 description,
+                tags=tags,
                 completed=completed
             )
             control_to_add.controls.append(new_item)

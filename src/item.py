@@ -7,7 +7,7 @@ if TYPE_CHECKING:
     from board_list import BoardList
 
 class Item(ft.Container):
-    id_counter = itertools.count(start=1)  # Começa em 1
+    id_counter = itertools.count(start=1)
 
     def __init__(
         self,
@@ -16,6 +16,7 @@ class Item(ft.Container):
         item_text: str,
         priority: str = "Baixa",
         description: str = "",
+        tags: list[str] = None,  # Novo campo para tags
         item_id: int = None,
         completed: bool = False
     ):
@@ -25,6 +26,7 @@ class Item(ft.Container):
         self.item_text = item_text
         self.priority = priority
         self.description = description
+        self.tags = tags if tags is not None else []  # Lista de tags, vazia por padrão
         self.completed = completed
 
         self.checkbox = ft.Checkbox(
@@ -85,6 +87,7 @@ class Item(ft.Container):
                 self.checkbox.label = self.item_text
                 self.priority = priority_dropdown.value
                 self.description = description_field.value
+                self.tags = [tag.strip() for tag in tags_field.value.split(",") if tag.strip()]  # Converte texto em lista
                 self.card_item.color = self.get_priority_color()
                 self.store.remove_item(self.list.board_list_id, self.item_id)
                 self.store.add_item(self.list.board_list_id, self)
@@ -92,7 +95,7 @@ class Item(ft.Container):
                 self.page.update()
             self.page.close(dialog)
 
-        name_field = ft.TextField(label="Nome da Card", value=self.item_text)
+        name_field = ft.TextField(label="Nome da Tarefa", value=self.item_text)
         priority_dropdown = ft.Dropdown(
             options=[
                 ft.dropdown.Option("Baixa"),
@@ -111,14 +114,20 @@ class Item(ft.Container):
             max_lines=5,
             width=200,
         )
+        tags_field = ft.TextField(
+            label="Tags (separadas por vírgula)",
+            value=", ".join(self.tags),
+            width=200,
+        )
 
         dialog = ft.AlertDialog(
-            title=ft.Text("Detalhes"),
+            title=ft.Text("Detalhes da Tarefa"),
             content=ft.Column(
                 [
                     name_field,
                     priority_dropdown,
                     description_field,
+                    tags_field,
                     ft.ElevatedButton(text="Guardar", on_click=close_dlg),
                 ],
                 tight=True,
@@ -154,6 +163,7 @@ class Item(ft.Container):
             item_text=src.data.item_text,
             priority=src.data.priority,
             description=src.data.description,
+            tags=src.data.tags,  # Passa as tags ao mover
             completed=src.data.completed,
             swap_control=self
         )

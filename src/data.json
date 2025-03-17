@@ -14,17 +14,13 @@
                             "color": "amber500",
                             "items": [
                                 {
-                                    "id": 3,
-                                    "item_text": "fazer o tpc",
-                                    "priority": "Alta",
-                                    "description": "",
-                                    "completed": false
-                                },
-                                {
                                     "id": 4,
                                     "item_text": "aaa",
                                     "priority": "M\u00e9dia",
                                     "description": "",
+                                    "tags": [
+                                        "teste"
+                                    ],
                                     "completed": false
                                 }
                             ]
@@ -33,7 +29,19 @@
                             "id": 1,
                             "title": "em progresso",
                             "color": "purple100",
-                            "items": []
+                            "items": [
+                                {
+                                    "id": 1,
+                                    "item_text": "fazer o tpc",
+                                    "priority": "Alta",
+                                    "description": "",
+                                    "tags": [
+                                        "escola",
+                                        "urgente"
+                                    ],
+                                    "completed": false
+                                }
+                            ]
                         },
                         {
                             "id": 12,
@@ -45,6 +53,10 @@
                                     "item_text": "teste",
                                     "priority": "Baixa",
                                     "description": "",
+                                    "tags": [
+                                        "conclu\u00c3\u00addo",
+                                        "revis\u00c3\u00a3o"
+                                    ],
                                     "completed": false
                                 },
                                 {
@@ -52,6 +64,9 @@
                                     "item_text": "teste",
                                     "priority": "Alta",
                                     "description": "",
+                                    "tags": [
+                                        "importante"
+                                    ],
                                     "completed": true
                                 }
                             ]
@@ -88,6 +103,10 @@
                                     "item_text": "Estudar para o exame",
                                     "priority": "Alta",
                                     "description": "Revisar cap\u00c3\u00adtulos 1 a 5",
+                                    "tags": [
+                                        "estudos",
+                                        "exame"
+                                    ],
                                     "completed": false
                                 }
                             ]
@@ -102,6 +121,10 @@
                                     "item_text": "Projeto de CM",
                                     "priority": "M\u00c3\u00a9dia",
                                     "description": "Finalizar o Trello",
+                                    "tags": [
+                                        "computa\u00c3\u00a7\u00c3\u00a3o",
+                                        "projeto"
+                                    ],
                                     "completed": false
                                 }
                             ]
@@ -122,6 +145,10 @@
                                     "item_text": "App de notas",
                                     "priority": "Baixa",
                                     "description": "Ideia para um novo app",
+                                    "tags": [
+                                        "ideia",
+                                        "desenvolvimento"
+                                    ],
                                     "completed": false
                                 }
                             ]
@@ -159,6 +186,10 @@
                                     "item_text": "teste",
                                     "priority": "Alta",
                                     "description": "1adawd",
+                                    "tags": [
+                                        "admin",
+                                        "teste"
+                                    ],
                                     "completed": false
                                 }
                             ]
