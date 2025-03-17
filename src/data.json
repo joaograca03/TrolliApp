@@ -37,7 +37,7 @@
                                 {
                                     "id": 3,
                                     "item_text": "aaa",
-                                    "priority": "M\u00e9dia",
+                                    "priority": "Média",
                                     "description": "aa",
                                     "completed": false
                                 }
@@ -54,6 +54,13 @@
                                     "priority": "Baixa",
                                     "description": "",
                                     "completed": false
+                                },
+                                {
+                                    "id": 21,
+                                    "item_text": "teste",
+                                    "priority": "Alta",
+                                    "description": "",
+                                    "completed": true
                                 }
                             ]
                         }
@@ -68,6 +75,66 @@
                     "id": 3,
                     "name": "teste1213",
                     "lists": []
+                }
+            ]
+        },
+        {
+            "name": "bernardo",
+            "password": "321",
+            "boards": [
+                {
+                    "id": 4,
+                    "name": "Projetos do Bernardo",
+                    "lists": [
+                        {
+                            "id": 0,
+                            "title": "A Fazer",
+                            "color": "blue200",
+                            "items": [
+                                {
+                                    "id": 1,
+                                    "item_text": "Estudar para o exame",
+                                    "priority": "Alta",
+                                    "description": "Revisar capítulos 1 a 5",
+                                    "completed": false
+                                }
+                            ]
+                        },
+                        {
+                            "id": 1,
+                            "title": "Em Andamento",
+                            "color": "yellow100",
+                            "items": [
+                                {
+                                    "id": 2,
+                                    "item_text": "Projeto de CM",
+                                    "priority": "Média",
+                                    "description": "Finalizar o Trello",
+                                    "completed": false
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "id": 5,
+                    "name": "Ideias",
+                    "lists": [
+                        {
+                            "id": 0,
+                            "title": "Pensamentos",
+                            "color": "green300",
+                            "items": [
+                                {
+                                    "id": 3,
+                                    "item_text": "App de notas",
+                                    "priority": "Baixa",
+                                    "description": "Ideia para um novo app",
+                                    "completed": false
+                                }
+                            ]
+                        }
+                    ]
                 }
             ]
         }
