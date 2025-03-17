@@ -27,6 +27,7 @@ class BoardList(ft.Container):
         self.color = color
         self.items = ft.Column([], tight=True, spacing=4)
 
+        # Carrega itens existentes do store para esta lista
         for item_data in self.store.get_items(self.board_list_id):
             new_item = Item(
                 list=self,
@@ -47,23 +48,7 @@ class BoardList(ft.Container):
                 ), new_item])
             )
 
-        self.new_item_field = ft.TextField(
-            label="new card name",
-            height=50,
-            bgcolor=ft.Colors.WHITE,
-            on_submit=self.add_item_handler,
-        )
-
-        self.priority_dropdown = ft.Dropdown(
-            options=[
-                ft.dropdown.Option("Baixa"),
-                ft.dropdown.Option("Média"),
-                ft.dropdown.Option("Alta"),
-            ],
-            value="Baixa",
-            width=150,
-        )
-
+        # Filtros de prioridade e status
         self.priority_filter = ft.Dropdown(
             options=[
                 ft.dropdown.Option("Todas"),
@@ -87,6 +72,30 @@ class BoardList(ft.Container):
             label="Filtrar por Estado",
             width=150,
             on_change=self.apply_filters,
+        )
+
+        # Painel expansível para os filtros dentro de um ExpansionPanelList
+        self.filter_panel = ft.ExpansionPanelList(
+            controls=[
+                ft.ExpansionPanel(
+                    header=ft.ListTile(title=ft.Text("Filtros")),
+                    content=ft.Column(
+                        controls=[self.priority_filter, self.status_filter],
+                        spacing=10,
+                    ),
+                    expanded=False,  # Inicia minimizado
+                )
+            ],
+            elevation=0,  # Sem sombra para manter simples
+            divider_color=ft.Colors.TRANSPARENT,  # Remove divisores extras
+        )
+
+        # Botão para criar nova tarefa
+        self.create_task_button = ft.ElevatedButton(
+            text="Create Task",
+            icon=ft.Icons.ADD,
+            on_click=self.open_create_task_modal,
+            bgcolor=ft.Colors.BLUE_200,
         )
 
         self.end_indicator = ft.Container(
@@ -157,28 +166,12 @@ class BoardList(ft.Container):
             alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
         )
 
-        self.filter_column = ft.Column(
-            controls=[self.priority_filter, self.status_filter],
-            spacing=10,
-        )
-
         self.inner_list = ft.Container(
             content=ft.Column(
                 [
                     self.header,
-                    self.filter_column,
-                    self.new_item_field,
-                    self.priority_dropdown,
-                    ft.TextButton(
-                        content=ft.Row(
-                            [
-                                ft.Icon(ft.Icons.ADD),
-                                ft.Text("add card", color=ft.Colors.BLACK38),
-                            ],
-                            tight=True,
-                        ),
-                        on_click=self.add_item_handler,
-                    ),
+                    self.filter_panel,  # Painel com filtros dentro de ExpansionPanelList
+                    self.create_task_button,  # Botão para criar nova tarefa
                     self.items,
                     self.end_indicator,
                 ],
@@ -292,10 +285,74 @@ class BoardList(ft.Container):
         self.header.controls[1].visible = True
         self.update()
 
-    def add_item_handler(self, e):
-        if self.new_item_field.value == "":
-            return
-        self.add_item()
+    def open_create_task_modal(self, e):
+        # Campos do modal
+        task_name_field = ft.TextField(label="Task Name", width=200)
+        priority_dropdown = ft.Dropdown(
+            options=[
+                ft.dropdown.Option("Baixa"),
+                ft.dropdown.Option("Média"),
+                ft.dropdown.Option("Alta"),
+            ],
+            value="Baixa",
+            label="Priority",
+            width=200,
+        )
+        description_field = ft.TextField(
+            label="Description",
+            multiline=True,
+            min_lines=3,
+            max_lines=5,
+            width=200,
+        )
+        completed_checkbox = ft.Checkbox(label="Completed", value=False)
+
+        def close_modal(e):
+            if task_name_field.value:  # Só cria se o nome estiver preenchido
+                self.add_item(
+                    item_text=task_name_field.value,
+                    priority=priority_dropdown.value,
+                    description=description_field.value,
+                    completed=completed_checkbox.value
+                )
+            self.page.close(modal)
+
+        def validate_fields(e):
+            create_button.disabled = not task_name_field.value
+            self.page.update()
+
+        create_button = ft.ElevatedButton(
+            text="Create",
+            bgcolor=ft.Colors.BLUE_200,
+            on_click=close_modal,
+            disabled=True,
+        )
+
+        modal = ft.AlertDialog(
+            title=ft.Text("Create New Task"),
+            content=ft.Column(
+                [
+                    task_name_field,
+                    priority_dropdown,
+                    description_field,
+                    completed_checkbox,
+                    ft.Row(
+                        [
+                            ft.ElevatedButton(text="Cancel", on_click=lambda e: self.page.close(modal)),
+                            create_button,
+                        ],
+                        alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+                    ),
+                ],
+                tight=True,
+                spacing=10,
+            ),
+            on_dismiss=lambda e: print("Modal dismissed"),
+        )
+
+        self.page.open(modal)
+        task_name_field.on_change = validate_fields  # Validação em tempo real
+        task_name_field.focus()
 
     def add_item(
         self,
@@ -343,29 +400,17 @@ class BoardList(ft.Container):
             control_to_add.controls.append(new_item)
             self.items.controls.insert(to_index, control_to_add)
         else:
-            new_item = (
-                Item(
-                    self,
-                    self.store,
-                    item_text,
-                    priority,
-                    description,
-                    completed=completed
-                )
-                if item_text
-                else Item(
-                    self,
-                    self.store,
-                    self.new_item_field.value,
-                    self.priority_dropdown.value,
-                    "",
-                    completed=False
-                )
+            new_item = Item(
+                self,
+                self.store,
+                item_text,
+                priority,
+                description,
+                completed=completed
             )
             control_to_add.controls.append(new_item)
             self.items.controls.append(control_to_add)
             self.store.add_item(self.board_list_id, new_item)
-            self.new_item_field.value = ""
 
         self.page.update()
 

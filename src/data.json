@@ -12,7 +12,22 @@
                             "id": 0,
                             "title": "por fazer",
                             "color": "amber500",
-                            "items": []
+                            "items": [
+                                {
+                                    "id": 18,
+                                    "item_text": "fazer o tpc",
+                                    "priority": "Alta",
+                                    "description": "",
+                                    "completed": false
+                                },
+                                {
+                                    "id": 1,
+                                    "item_text": "teste",
+                                    "priority": "Baixa",
+                                    "description": "hello world",
+                                    "completed": false
+                                }
+                            ]
                         },
                         {
                             "id": 1,
@@ -20,10 +35,10 @@
                             "color": "purple100",
                             "items": [
                                 {
-                                    "id": 5,
-                                    "item_text": "fazer o tpc",
-                                    "priority": "Alta",
-                                    "description": "aaa",
+                                    "id": 3,
+                                    "item_text": "aaa",
+                                    "priority": "M\u00e9dia",
+                                    "description": "aa",
                                     "completed": false
                                 }
                             ]
@@ -34,11 +49,11 @@
                             "color": "lightgreen",
                             "items": [
                                 {
-                                    "id": 21,
+                                    "id": 20,
                                     "item_text": "teste",
-                                    "priority": "Alta",
+                                    "priority": "Baixa",
                                     "description": "",
-                                    "completed": true
+                                    "completed": false
                                 }
                             ]
                         }
