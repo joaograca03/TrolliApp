@@ -3,7 +3,6 @@ from data_store import DataStore
 import flet as ft
 from sidebar import Sidebar
 
-
 class AppLayout(ft.Row):
     def __init__(self, app, page: ft.Page, store: DataStore, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -19,7 +18,38 @@ class AppLayout(ft.Row):
             on_click=self.toggle_nav_rail,
         )
         self.sidebar = Sidebar(self, self.store)
-        self.members_view = ft.Text("members view")
+        
+        # Inicialização do members_view como um Column dinâmico
+        self.members_view = ft.Column(
+            [
+                ft.Row(
+                    [
+                        ft.Text("Members", theme_style=ft.TextThemeStyle.HEADLINE_MEDIUM),
+                        ft.TextButton(
+                            "Add New User",
+                            icon=ft.Icons.ADD,
+                            on_click=self.add_user,
+                            style=ft.ButtonStyle(
+                                bgcolor={
+                                    ft.ControlState.DEFAULT: ft.Colors.BLUE_200,
+                                    ft.ControlState.HOVERED: ft.Colors.BLUE_400,
+                                },
+                                color=ft.Colors.BLACK,
+                                icon_color=ft.Colors.BLACK,
+                                shape=ft.RoundedRectangleBorder(radius=3),
+                            ),
+                        ),
+                    ],
+                    alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+                ),
+                ft.Text("No users to display"),  # Placeholder inicial
+            ],
+            expand=True,
+            alignment=ft.MainAxisAlignment.START,
+            horizontal_alignment=ft.CrossAxisAlignment.START,
+            spacing=10,
+        )
+        
         self.all_boards_view = ft.Column(
             [
                 ft.Row(
@@ -42,7 +72,7 @@ class AppLayout(ft.Row):
                                         ft.ControlState.DEFAULT: ft.Colors.BLUE_200,
                                         ft.ControlState.HOVERED: ft.Colors.BLUE_400,
                                     },
-                                    color=ft.Colors.BLACK,  
+                                    color=ft.Colors.BLACK,
                                     icon_color=ft.Colors.BLACK,
                                     shape=ft.RoundedRectangleBorder(radius=3),
                                 ),
@@ -100,6 +130,84 @@ class AppLayout(ft.Row):
         self.page.update()
 
     def set_members_view(self):
+        # Define a cor do texto com base no tema
+        text_color = ft.Colors.BLACK if self.page.theme_mode == ft.ThemeMode.LIGHT else ft.Colors.WHITE
+        
+        # Atualiza a lista de usuários dinamicamente
+        users = self.store.get_users()
+        if users:
+            self.members_view.controls = [
+                ft.Row(
+                    [
+                        ft.Text("Members", theme_style=ft.TextThemeStyle.HEADLINE_MEDIUM),
+                        ft.TextButton(
+                            "Add New User",
+                            icon=ft.Icons.ADD,
+                            on_click=self.add_user,
+                            style=ft.ButtonStyle(
+                                bgcolor={
+                                    ft.ControlState.DEFAULT: ft.Colors.BLUE_200,
+                                    ft.ControlState.HOVERED: ft.Colors.BLUE_400,
+                                },
+                                color=ft.Colors.BLACK,
+                                icon_color=ft.Colors.BLACK,
+                                shape=ft.RoundedRectangleBorder(radius=3),
+                            ),
+                        ),
+                    ],
+                    alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+                ),
+                ft.Column(
+                    [
+                        ft.Row(
+                            [
+                                ft.Text(f"User: {user['name']}", color=text_color),
+                                ft.Row(
+                                    [
+                                        ft.Text(f"Boards: {len(user['boards'])}", color=text_color),
+                                        ft.IconButton(
+                                            icon=ft.Icons.DELETE,
+                                            icon_color=ft.Colors.RED,
+                                            on_click=self.delete_user,
+                                            data=user['name'],
+                                            tooltip="Delete User",
+                                        ),
+                                    ],
+                                    alignment=ft.MainAxisAlignment.END,
+                                ),
+                            ],
+                            alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+                            width=300,
+                        )
+                        for user in users if user['name'] != "admin"  # Evita listar o admin para deleção
+                    ],
+                    scroll=ft.ScrollMode.AUTO,
+                ),
+            ]
+        else:
+            self.members_view.controls = [
+                ft.Row(
+                    [
+                        ft.Text("Members", theme_style=ft.TextThemeStyle.HEADLINE_MEDIUM),
+                        ft.TextButton(
+                            "Add New User",
+                            icon=ft.Icons.ADD,
+                            on_click=self.add_user,
+                            style=ft.ButtonStyle(
+                                bgcolor={
+                                    ft.ControlState.DEFAULT: ft.Colors.BLUE_200,
+                                    ft.ControlState.HOVERED: ft.Colors.BLUE_400,
+                                },
+                                color=ft.Colors.BLACK,
+                                icon_color=ft.Colors.BLACK,
+                                shape=ft.RoundedRectangleBorder(radius=3),
+                            ),
+                        ),
+                    ],
+                    alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+                ),
+                ft.Text("No users to display", color=text_color),
+            ]
         self.active_view = self.members_view
         self.sidebar.top_nav_rail.selected_index = 1
         self.sidebar.bottom_nav_rail.selected_index = None
@@ -124,7 +232,7 @@ class AppLayout(ft.Row):
                             ft.Container(
                                 content=ft.Text(
                                     value=b.name,
-                                    color=ft.Colors.BLACK,  # Cor fixa em preto, independentemente do tema
+                                    color=ft.Colors.BLACK,
                                 ),
                                 data=b,
                                 expand=True,
@@ -143,7 +251,7 @@ class AppLayout(ft.Row):
                                             data=b,
                                         ),
                                     ],
-                                    icon_color=ft.Colors.BLACK,  # Cor do ícone fixa em preto, independentemente do tema
+                                    icon_color=ft.Colors.BLACK,
                                 ),
                                 padding=ft.padding.only(right=-10),
                                 border_radius=ft.border_radius.all(3),
@@ -179,3 +287,57 @@ class AppLayout(ft.Row):
         self.toggle_nav_rail_button.selected = not self.toggle_nav_rail_button.selected
         self.page_resize()
         self.page.update()
+
+    def add_user(self, e):
+        def close_dlg(e):
+            if user_name.value == "" or password.value == "":
+                user_name.error_text = "Por favor, insira o nome de usuário"
+                password.error_text = "Por favor, insira a senha"
+                self.page.update()
+                return
+
+            if self.store.get_user(user_name.value):
+                user_name.error_text = "Usuário já existe"
+                self.page.update()
+                return
+
+            from user import User
+            new_user = User(user_name.value, password.value)
+            self.store.add_user(new_user)
+            self.page.close(dialog)
+            self.set_members_view()  # Atualiza a lista de usuários após adicionar
+            self.page.snack_bar = ft.SnackBar(ft.Text("Usuário adicionado com sucesso!"), open=True)
+            self.page.update()
+
+        user_name = ft.TextField(label="Nome de usuário")
+        password = ft.TextField(label="Senha", password=True)
+        dialog = ft.AlertDialog(
+            title=ft.Text("Adicionar Novo Usuário"),
+            content=ft.Column(
+                [
+                    user_name,
+                    password,
+                    ft.Row(
+                        [
+                            ft.ElevatedButton(text="Cancel", on_click=lambda e: self.page.close(dialog)),
+                            ft.ElevatedButton(text="Add", on_click=close_dlg),
+                        ],
+                        alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+                    ),
+                ],
+                tight=True,
+            ),
+            on_dismiss=lambda e: print("Diálogo de adição fechado!"),
+        )
+        self.page.open(dialog)
+
+    def delete_user(self, e):
+        user_name = e.control.data
+        if user_name != "admin":
+            self.store.remove_user(user_name)
+            self.set_members_view()  # Atualiza a lista de usuários após remover
+            self.page.snack_bar = ft.SnackBar(ft.Text(f"Usuário '{user_name}' removido com sucesso!"), open=True)
+            self.page.update()
+        else:
+            self.page.snack_bar = ft.SnackBar(ft.Text("Não é possível remover o usuário 'admin'"), open=True)
+            self.page.update()

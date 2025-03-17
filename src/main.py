@@ -97,7 +97,6 @@ class TrelloApp(AppLayout):
         print(f"Cores aplicadas: page={self.page.bgcolor}, sidebar={self.sidebar.bgcolor}, appbar={self.appbar.bgcolor}")
 
     def toggle_theme(self, e):
-        print(f"Alternando tema. Tema atual antes da mudança: {self.page.theme_mode}")
         if self.page.theme_mode == ft.ThemeMode.LIGHT:
             self.page.theme_mode = ft.ThemeMode.DARK
             e.control.text = "Light Mode"
@@ -107,7 +106,9 @@ class TrelloApp(AppLayout):
             e.control.text = "Dark Mode"
             self.page.client_storage.set("theme_mode", "LIGHT")
         self.update_theme_colors()  # Atualiza as cores de fundo
-        print(f"Tema alternado para: {self.page.theme_mode}")
+        # Se a view ativa for "Members", atualiza-a para refletir o novo tema
+        if self.active_view == self.members_view:
+            self.set_members_view()
 
     def initialize_login(self):
         self.appbar_items = [
@@ -176,6 +177,7 @@ class TrelloApp(AppLayout):
                 )
                 self.page.update()
                 self.hydrate_all_boards_view()
+                self.sidebar.refresh()  # Atualiza o Sidebar para refletir o estado do usuário
                 self.sidebar.sync_board_destinations()
                 if len(self.boards) == 0:
                     self.create_new_board("My First Board")
