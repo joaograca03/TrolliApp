@@ -18,23 +18,23 @@ Seguem-se as funcionalidades adicionais implementadas, com uma explicação dos 
 
 **Descrição**: Após o início de sessão, o menu da barra superior inclui a opção "Close APP", implementada com `page.window.close()`, que encerra a janela de forma imediata e controlada. A eliminação de botões irrelevantes reduz a complexidade visual, mantendo o foco nas funcionalidades principais, como a criação e gestão de *boards*. Esta alteração melhora a usabilidade e reflete uma abordagem minimalista, adequada a um projeto académico onde a clareza é prioritária.
 
-### 3. Adição de Propriedades aos Itens das Listas (*Priority* *Description* e *Completed*)
+### 3. Adição de Propriedades aos Itens das Listas (*Priority*, *Description*, *Completed* e *Tags*)
 
-**Motivo da Inclusão**: A introdução de propriedades como prioridade e estado (*completed*) foi motivada pela necessidade de enriquecer a funcionalidade das listas, tornando-as mais úteis para a gestão de tarefas. Estas características são fundamentais em ferramentas como o Trello, permitindo uma organização mais detalhada.
+**Motivo da Inclusão**: A introdução de propriedades como prioridade, estado (*completed*) e tags foi motivada pela necessidade de enriquecer a funcionalidade das listas, tornando-as mais úteis para a gestão de tarefas. Estas características são fundamentais em ferramentas como o Trello, permitindo uma organização mais detalhada e categorização flexível das tarefas.
 
-**Descrição**: Cada item numa lista possui agora uma prioridade ("Baixa", "Média", "Alta") e um estado, indicado por uma *checkbox* que marca a tarefa como concluída ou não. Estas propriedades são definidas no momento da criação ou edição, através de um formulário modal, e persistem no ficheiro JSON. A prioridade determina a cor do item na interface (verde para "Baixa", laranja para "Média", vermelho para "Alta"), enquanto o estado facilita o acompanhamento do progresso. Esta implementação aumenta a flexibilidade e a capacidade de organização, aproximando o Trolli de uma ferramenta profissional.
+**Descrição**: Cada item numa lista possui agora uma prioridade ("Baixa", "Média", "Alta"), um estado, indicado por uma *checkbox* que marca a tarefa como concluída ou não, e uma lista de *tags* (ex.: "escola", "urgente") para categorização adicional. Estas propriedades são definidas no momento da criação ou edição, através de um formulário modal que inclui um campo de texto para tags separadas por vírgulas, e persistem no ficheiro JSON via `JSONStore`. A prioridade determina a cor do item na interface (verde para "Baixa", laranja para "Média", vermelho para "Alta"), enquanto o estado facilita o acompanhamento do progresso e as tags permitem agrupar tarefas por temas ou contextos específicos. Esta implementação aumenta a flexibilidade e a capacidade de organização, aproximando o Trolli de uma ferramenta profissional.
 
-### 4. Filtros nas Listas para Pesquisa por Estado e Prioridade
+### 4. Filtros nas Listas para Pesquisa por Estado, Prioridade e Tags
 
-**Motivo da Inclusão**: A adição de filtros foi motivada pela necessidade de melhorar a eficiência na gestão de tarefas, especialmente em listas com muitos itens. Esta funcionalidade permite aos utilizadores localizar rapidamente tarefas específicas, um requisito comum em ferramentas de produtividade.
+**Motivo da Inclusão**: A adição de filtros, incluindo o suporte para tags, foi motivada pela necessidade de melhorar a eficiência na gestão de tarefas, especialmente em listas com muitos itens. Esta funcionalidade permite aos utilizadores localizar rapidamente tarefas específicas com base em critérios variados, um requisito comum em ferramentas de produtividade.
 
-**Descrição**: Cada lista inclui dois menus suspensos (*dropdowns*) num painel expansível: um para filtrar por estado ("Todas", "Concluídas", "Não Concluídas") e outro por prioridade ("Todas", "Baixa", "Média", "Alta"). A lógica em Python atualiza dinamicamente a visibilidade dos itens com base nas seleções, por exemplo, mostrando apenas tarefas concluídas se "Concluídas" for escolhido. Esta funcionalidade, integrada na classe `BoardList`, melhora a navegabilidade e permite uma gestão mais focada, sendo particularmente útil em cenários com grande volume de tarefas.
+**Descrição**: Cada lista inclui um painel expansível com dois menus suspensos (*dropdowns*) e um botão para filtros: um *dropdown* para filtrar por estado ("Todas", "Concluídas", "Não Concluídas"), outro por prioridade ("Todas", "Baixa", "Média", "Alta"), e um botão "Selecionar Tags" que abre um diálogo com *checkboxes* para todas as tags únicas presentes na lista. A lógica em Python, implementada na classe `BoardList`, atualiza dinamicamente a visibilidade dos itens com base nas seleções combinadas. Por exemplo, selecionar "Concluídas" e a tag "escola" mostra apenas tarefas concluídas marcadas com "escola". Esta funcionalidade melhora a navegabilidade e permite uma gestão mais focada, sendo particularmente útil em cenários com grande volume de tarefas e diversas categorias.
 
 ### 5. Melhoria da Interface das Listas com Modal e Cores por Prioridade
 
-**Motivo da Inclusão**: A reformulação da interface das listas foi pensada para otimizar a experiência do utilizador, escondendo o formulário de criação num modal para reduzir desordem visual e usando cores para destacar prioridades, facilitando a identificação rápida de tarefas críticas para além disso também é possivél visualizar e editar os detalhes de um item clicando em cima do mesmo que abrirá um modal que permite visualizar mais informação acerca do item em questão.
+**Motivo da Inclusão**: A reformulação da interface das listas foi pensada para otimizar a experiência do utilizador, escondendo o formulário de criação num modal para reduzir desordem visual e usando cores para destacar prioridades, facilitando a identificação rápida de tarefas críticas. Além disso, é possível visualizar e editar os detalhes de um item clicando em cima do mesmo, o que abrirá um modal com mais informação acerca do item em questão.
 
-**Descrição**: O botão "Criar Tarefa" em cada lista abre um modal com campos para nome, prioridade, descrição e estado da tarefa. A criação só é concluída se o nome for preenchido, garantindo dados válidos. Após a criação, os itens exibem cores associadas à prioridade (verde, laranja ou vermelho), definidas na classe `Item`. Esta melhoria torna a interface mais limpa e intuitiva, enquanto as cores fornecem uma indicação visual imediata da urgência, alinhando-se com padrões de design modernos e práticos.
+**Descrição**: O botão "Criar Tarefa" em cada lista abre um modal com campos para nome, prioridade, descrição, tags e estado da tarefa. A criação só é concluída se o nome for preenchido, garantindo dados válidos. Após a criação, os itens exibem cores associadas à prioridade (verde, laranja ou vermelho), definidas na classe `Item`. Esta melhoria torna a interface mais limpa e intuitiva, enquanto as cores fornecem uma indicação visual imediata da urgência, alinhando-se com padrões de design modernos e práticos.
 
 ### 6. Sistema de Autenticação com Registo de Utilizadores
 
@@ -60,9 +60,8 @@ Seguem-se as funcionalidades adicionais implementadas, com uma explicação dos 
 
 **Descrição**: No menu superior, a opção "Dark Mode" ou "Light Mode" permite alternar entre temas, com a escolha gravada no `client_storage` para persistência. O modo escuro usa tons como `GREY_900` para o fundo, enquanto o modo claro usa `BLUE_GREY_200`, atualizados pela função `update_theme_colors()`. Esta alteração é refletida na *appbar*, *sidebar* e listas em tempo real, oferecendo uma experiência visual adaptável às preferências do utilizador e às condições de iluminação.
 
-
-
 ## Instruções de Utilização
+
 ### Requisitos
 - Python 3.8 ou superior.
 - Framework Flet: `pip install flet`.
@@ -71,8 +70,8 @@ Seguem-se as funcionalidades adicionais implementadas, com uma explicação dos 
 - Navegue até `Trello/src/` e execute: `python main.py`.
 - Inicie a aplicação e faça *login* (ex.: "admin", senha "admin") ou registe um novo utilizador.
 - Crie *boards* e listas na vista "Boards".
-- Adicione tarefas com o botão "Create Task", definindo titulo, descrição, prioridade e estado.
-- Use os filtros nas listas para organizar tarefas.
+- Adicione tarefas com o botão "Create Task", definindo título, descrição, prioridade, tags (ex.: "trabalho, urgente") e estado.
+- Use os filtros nas listas para organizar tarefas por estado, prioridade ou tags (abra o diálogo de tags para selecionar múltiplas opções).
 - Altere o tema no menu superior.
 - Se *admin*, aceda a "Members" para gerir utilizadores.
 - Feche a aplicação com "Close App".

@@ -327,4 +327,5 @@ def main(page: ft.Page):
     store.app = app
     page.add(app)
 
-ft.app(target=main, assets_dir="../assets")
+#ft.app(target=main, assets_dir="../assets")
+ft.app(target=main, view=ft.WEB_BROWSER, host="0.0.0.0", port=3000, assets_dir="../assets")
