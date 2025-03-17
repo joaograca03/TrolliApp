@@ -34,6 +34,43 @@ class BoardList(ft.Container):
             on_submit=self.add_item_handler,
         )
 
+        # Dropdown para selecionar a prioridade ao criar uma card
+        self.priority_dropdown = ft.Dropdown(
+            options=[
+                ft.dropdown.Option("Baixa"),
+                ft.dropdown.Option("Média"),
+                ft.dropdown.Option("Alta"),
+            ],
+            value="Baixa",  # Valor padrão
+            width=150,
+        )
+
+        # Controles de filtro
+        self.priority_filter = ft.Dropdown(
+            options=[
+                ft.dropdown.Option("Todas"),
+                ft.dropdown.Option("Baixa"),
+                ft.dropdown.Option("Média"),
+                ft.dropdown.Option("Alta"),
+            ],
+            value="Todas",  # Valor padrão (sem filtro)
+            label="Filtrar por Prioridade",
+            width=150,
+            on_change=self.apply_filters,
+        )
+
+        self.status_filter = ft.Dropdown(
+            options=[
+                ft.dropdown.Option("Todas"),
+                ft.dropdown.Option("Concluídas"),
+                ft.dropdown.Option("Não Concluídas"),
+            ],
+            value="Todas",  # Valor padrão (sem filtro)
+            label="Filtrar por Estado",
+            width=150,
+            on_change=self.apply_filters,
+        )
+
         self.end_indicator = ft.Container(
             bgcolor=ft.Colors.BLACK26,
             border_radius=ft.border_radius.all(30),
@@ -102,11 +139,19 @@ class BoardList(ft.Container):
             alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
         )
 
+        # Adicionar os filtros em uma coluna (um abaixo do outro)
+        self.filter_column = ft.Column(
+            controls=[self.priority_filter, self.status_filter],
+            spacing=10,
+        )
+
         self.inner_list = ft.Container(
             content=ft.Column(
                 [
                     self.header,
+                    self.filter_column,  # Adicionar os filtros aqui
                     self.new_item_field,
+                    self.priority_dropdown,
                     ft.TextButton(
                         content=ft.Row(
                             [
@@ -150,6 +195,30 @@ class BoardList(ft.Container):
             on_leave=self.item_drag_leave,
         )
         super().__init__(content=self.view, data=self)
+
+    def apply_filters(self, e):
+        # Aplicar os filtros e atualizar a exibição das cards
+        for item_control in self.items.controls:
+            item = item_control.controls[1]  # Acessar o conteúdo da card
+            item_visible = True
+
+            # Filtrar por prioridade
+            if self.priority_filter.value != "Todas":
+                if item.priority != self.priority_filter.value:
+                    item_visible = False
+
+            # Filtrar por estado (concluído/não concluído)
+            if self.status_filter.value != "Todas":
+                is_completed = item.checkbox.value
+                if self.status_filter.value == "Concluídas" and not is_completed:
+                    item_visible = False
+                elif self.status_filter.value == "Não Concluídas" and is_completed:
+                    item_visible = False
+
+            # Atualizar a visibilidade da card
+            item_control.visible = item_visible
+
+        self.page.update()
 
     def item_drag_accept(self, e):
         src = self.page.get_control(e.src_id)
@@ -246,16 +315,16 @@ class BoardList(ft.Container):
 
         # insert (drag from other list to middle of this list)
         elif to_index is not None:
-            new_item = Item(self, self.store, item)
+            new_item = Item(self, self.store, item, self.priority_dropdown.value)
             control_to_add.controls.append(new_item)
             self.items.controls.insert(to_index, control_to_add)
 
         # add new (drag from other list to end of this list, or use add item button)
         else:
             new_item = (
-                Item(self, self.store, item)
+                Item(self, self.store, item, self.priority_dropdown.value)
                 if item
-                else Item(self, self.store, self.new_item_field.value)
+                else Item(self, self.store, self.new_item_field.value, self.priority_dropdown.value)
             )
             control_to_add.controls.append(new_item)
             self.items.controls.append(control_to_add)

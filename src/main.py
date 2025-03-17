@@ -172,7 +172,6 @@ class TrelloApp(AppLayout):
 
 
 def main(page: ft.Page):
-
     page.title = "Flet Trello clone"
     page.padding = 0
     page.theme = ft.Theme(font_family="Verdana")
