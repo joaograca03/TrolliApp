@@ -10,19 +10,17 @@ os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
 class TrelloApp(AppLayout):
     def __init__(self, page: ft.Page, store: DataStore):
-        self.page = page  # Armazena a referência diretamente
+        self.page = page
         self.store = store
-        self.user: str | None = None  # Nome do usuário logado
+        self.user: str | None = None
         self.boards = []
 
-        # Define appbar_items antes de qualquer uso
         self.appbar_items = [
             ft.PopupMenuItem(text="Log in", on_click=self.login),
             ft.PopupMenuItem(),  # divisor
             ft.PopupMenuItem(text="Settings"),
         ]
 
-        # Configuração inicial da AppBar
         self.appbar = ft.AppBar(
             leading=ft.Icon(ft.Icons.GRID_GOLDENRATIO_ROUNDED),
             leading_width=100,
@@ -43,7 +41,6 @@ class TrelloApp(AppLayout):
             ],
         )
 
-        # Inicializa o AppLayout
         super().__init__(
             self,
             self.page,
@@ -53,7 +50,6 @@ class TrelloApp(AppLayout):
             vertical_alignment=ft.CrossAxisAlignment.START,
         )
 
-        # Configuração inicial da página
         self.page.title = "Flet Trello clone"
         self.page.padding = 0
         self.page.theme = ft.Theme(font_family="Verdana")
@@ -64,14 +60,9 @@ class TrelloApp(AppLayout):
         self.page.on_route_change = self.route_change
         self.page.appbar = self.appbar
 
-        print("Inicializando TrelloApp, self.page:", self.page)
-
-        # Configura a tela de login inicial
         self.initialize_login()
 
     def initialize_login(self):
-        """Configura a tela de login."""
-        print("Configurando tela de login, self.page:", self.page)
         self.appbar_items = [
             ft.PopupMenuItem(text="Log in", on_click=self.login),
             ft.PopupMenuItem(),  # divisor
@@ -87,6 +78,7 @@ class TrelloApp(AppLayout):
                         [
                             ft.Text("Bem-vindo ao Trolli", size=30, font_family="Pacifico"),
                             ft.ElevatedButton("Fazer Login", on_click=self.login),
+                            ft.ElevatedButton("Registrar", on_click=self.register),
                         ],
                         alignment=ft.MainAxisAlignment.CENTER,
                         horizontal_alignment=ft.CrossAxisAlignment.CENTER,
@@ -134,6 +126,7 @@ class TrelloApp(AppLayout):
                 self.page.update()
                 self.hydrate_all_boards_view()
                 self.sidebar.sync_board_destinations()
+                self.sidebar.refresh()  # Atualiza a sidebar após login
                 if len(self.boards) == 0:
                     self.create_new_board("My First Board")
                 self.page.route = "/boards"
@@ -142,7 +135,6 @@ class TrelloApp(AppLayout):
                 user_name.error_text = "Usuário ou senha inválidos"
                 self.page.update()
 
-        print("Tentando abrir modal de login, self.page:", self.page)
         user_name = ft.TextField(label="Nome de usuário")
         password = ft.TextField(label="Senha", password=True)
         dialog = ft.AlertDialog(
@@ -159,8 +151,44 @@ class TrelloApp(AppLayout):
         )
         self.page.open(dialog)
 
+    def register(self, e):
+        def close_dlg(e):
+            if user_name.value == "" or password.value == "":
+                user_name.error_text = "Por favor, insira o nome de usuário"
+                password.error_text = "Por favor, insira a senha"
+                self.page.update()
+                return
+
+            if self.store.get_user(user_name.value):
+                user_name.error_text = "Usuário já existe"
+                self.page.update()
+                return
+
+            new_user = User(user_name.value, password.value)
+            self.store.add_user(new_user)
+            print(f"Novo usuário registrado: {user_name.value}")
+            self.page.close(dialog)
+            self.page.snack_bar = ft.SnackBar(ft.Text("Usuário registrado com sucesso!"), open=True)
+            self.page.update()
+
+        user_name = ft.TextField(label="Nome de usuário")
+        password = ft.TextField(label="Senha", password=True)
+        dialog = ft.AlertDialog(
+            title=ft.Text("Registrar Novo Usuário"),
+            content=ft.Column(
+                [
+                    user_name,
+                    password,
+                    ft.ElevatedButton(text="Registrar", on_click=close_dlg),
+                ],
+                tight=True,
+            ),
+            on_dismiss=lambda e: print("Diálogo de registro fechado!"),
+        )
+        self.page.open(dialog)
+
     def logout(self, e):
-        print(f"Logout do usuário: {self.user}, self.page antes do logout:", self.page)
+        print(f"Logout do usuário: {self.user}")
         self.user = None
         self.page.client_storage.remove("current_user")
         self.store.set_current_user(None)
@@ -171,8 +199,6 @@ class TrelloApp(AppLayout):
             ft.PopupMenuItem(text="Settings"),
         ]
         self.appbar.actions[0].content = ft.PopupMenuButton(items=self.appbar_items)
-        
-        # Redireciona para a tela de login
         self.page.views.clear()
         self.page.views.append(
             ft.View(
@@ -182,6 +208,7 @@ class TrelloApp(AppLayout):
                         [
                             ft.Text("Bem-vindo ao Trolli", size=30, font_family="Pacifico"),
                             ft.ElevatedButton("Fazer Login", on_click=self.login),
+                            ft.ElevatedButton("Registrar", on_click=self.register),
                         ],
                         alignment=ft.MainAxisAlignment.CENTER,
                         horizontal_alignment=ft.CrossAxisAlignment.CENTER,
@@ -190,16 +217,15 @@ class TrelloApp(AppLayout):
                 bgcolor=ft.Colors.BLUE_GREY_200,
             )
         )
+        self.sidebar.refresh()  # Atualiza a sidebar após logout
         self.page.route = "/login"
         self.page.update()
-        print("Após logout, self.page:", self.page)
 
     def route_change(self, e):
         if self.page is None:
             print("Erro: self.page é None no route_change")
             return
         troute = ft.TemplateRoute(self.page.route)
-        print(f"Route change para: {troute.route}, self.page:", self.page)
         
         if not self.user and troute.route != "/login":
             self.page.route = "/login"
@@ -216,8 +242,15 @@ class TrelloApp(AppLayout):
         elif troute.match("/boards"):
             self.set_all_boards_view()
         elif troute.match("/members"):
-            self.set_members_view()
+            if self.is_admin():
+                self.set_members_view()
+            else:
+                self.page.route = "/boards"
         self.page.update()
+
+    def is_admin(self):
+        user = self.store._get_current_user()
+        return user and user["name"] == "admin"
 
     def add_board(self, e):
         def close_dlg(e):

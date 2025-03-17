@@ -5,11 +5,12 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from board import Board
     from board_list import BoardList
-    from user import User 
+    from user import User
     from item import Item
 
 from data_store import DataStore
 from board import Board
+from user import User
 
 class JSONStore(DataStore):
     def __init__(self, filename="data.json", app=None, page=None):
@@ -18,6 +19,7 @@ class JSONStore(DataStore):
         self.current_user = None
         self.app = app
         self.page = page
+        self.ensure_admin_user()
 
     def _load_data(self):
         if os.path.exists(self.filename):
@@ -28,6 +30,13 @@ class JSONStore(DataStore):
     def _save_data(self):
         with open(self.filename, "w") as file:
             json.dump(self.data, file, indent=4)
+
+    def ensure_admin_user(self):
+        admin_user = self.get_user("admin")
+        if not admin_user:
+            admin_user = User("admin", "admin")
+            self.add_user(admin_user)
+            print("Usuário admin criado com sucesso.")
 
     def set_current_user(self, user):
         self.current_user = user
@@ -52,13 +61,13 @@ class JSONStore(DataStore):
         user = self._get_current_user()
         if user and user["boards"]:
             return max(b["id"] for b in user["boards"]) + 1
-        return 1  # Começa em 1 se não houver boards
+        return 1
 
     def add_board(self, board: "Board"):
         user = self._get_current_user()
         if user:
             new_id = self._get_next_board_id()
-            board.board_id = new_id  # Define o ID do board
+            board.board_id = new_id
             print(f"Adicionando board '{board.name}' para o usuário '{user['name']}'")
             user["boards"].append({
                 "id": board.board_id,
@@ -77,7 +86,7 @@ class JSONStore(DataStore):
                         self,
                         board_data["name"],
                         self.page,
-                        board_id=board_data["id"],  # Passa o ID do JSON
+                        board_id=board_data["id"],
                         lists=board_data["lists"]
                     )
         return None
@@ -91,7 +100,7 @@ class JSONStore(DataStore):
                     self,
                     b["name"],
                     self.page,
-                    board_id=b["id"],  # Passa o ID do JSON
+                    board_id=b["id"],
                     lists=b["lists"]
                 )
                 for b in user["boards"]

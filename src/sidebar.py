@@ -5,23 +5,11 @@ class Sidebar(ft.Container):
     def __init__(self, app_layout, store: DataStore):
         self.store: DataStore = store
         self.app_layout = app_layout
-        self.page = app_layout.page  # Acesso ao page via app_layout
+        self.page = app_layout.page
         self.nav_rail_visible = True
 
-        self.top_nav_items = [
-            ft.NavigationRailDestination(
-                label_content=ft.Text("Boards"),
-                label="Boards",
-                icon=ft.Icons.BOOK_OUTLINED,
-                selected_icon=ft.Icons.BOOK_OUTLINED,
-            ),
-            ft.NavigationRailDestination(
-                label_content=ft.Text("Members"),
-                label="Members",
-                icon=ft.Icons.PERSON,
-                selected_icon=ft.Icons.PERSON,
-            ),
-        ]
+        # Inicializa os itens de navegação
+        self.update_nav_items()
 
         self.top_nav_rail = ft.NavigationRail(
             selected_index=None,
@@ -30,7 +18,7 @@ class Sidebar(ft.Container):
             destinations=self.top_nav_items,
             bgcolor=ft.Colors.BLUE_GREY,
             extended=True,
-            height=110,
+            height=110 if not self.is_admin() else 160,
         )
 
         self.bottom_nav_rail = ft.NavigationRail(
@@ -76,6 +64,29 @@ class Sidebar(ft.Container):
             visible=self.nav_rail_visible,
         )
 
+    def is_admin(self):
+        user = self.store._get_current_user()
+        return user and user["name"] == "admin"
+
+    def update_nav_items(self):
+        self.top_nav_items = [
+            ft.NavigationRailDestination(
+                label_content=ft.Text("Boards"),
+                label="Boards",
+                icon=ft.Icons.BOOK_OUTLINED,
+                selected_icon=ft.Icons.BOOK_OUTLINED,
+            ),
+        ]
+        if self.is_admin():
+            self.top_nav_items.append(
+                ft.NavigationRailDestination(
+                    label_content=ft.Text("Members"),
+                    label="Members",
+                    icon=ft.Icons.PERSON,
+                    selected_icon=ft.Icons.PERSON,
+                )
+            )
+
     def sync_board_destinations(self):
         boards = self.store.get_boards()
         self.bottom_nav_rail.destinations = [
@@ -114,8 +125,8 @@ class Sidebar(ft.Container):
         board_index = e.control.data
         new_name = e.control.value
         board = self.store.get_boards()[board_index]
-        self.store.update_board(board, {"name": new_name})  # Atualiza o nome no store
-        self.app_layout.hydrate_all_boards_view()  # Reflete a mudança na UI
+        self.store.update_board(board, {"name": new_name})
+        self.app_layout.hydrate_all_boards_view()
         e.control.read_only = True
         e.control.border = ft.InputBorder.NONE
         self.page.update()
@@ -126,7 +137,7 @@ class Sidebar(ft.Container):
         self.top_nav_rail.selected_index = index
         if index == 0:
             self.page.route = "/boards"
-        elif index == 1:
+        elif index == 1 and self.is_admin():
             self.page.route = "/members"
         self.page.update()
 
@@ -135,4 +146,10 @@ class Sidebar(ft.Container):
         self.top_nav_rail.selected_index = None
         self.bottom_nav_rail.selected_index = index
         self.page.route = f"/board/{index}"
+        self.page.update()
+
+    def refresh(self):
+        self.update_nav_items()
+        self.top_nav_rail.destinations = self.top_nav_items
+        self.top_nav_rail.height = 110 if not self.is_admin() else 160
         self.page.update()

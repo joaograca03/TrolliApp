@@ -2,14 +2,79 @@ from board import Board
 from data_store import DataStore
 import flet as ft
 from sidebar import Sidebar
+from user import User
 
+class MembersView(ft.Column):
+    def __init__(self, app, store: DataStore):
+        self.app = app
+        self.store = store
+        self.users_list = ft.ListView(expand=True)
+
+        super().__init__(
+            controls=[
+                ft.Row(
+                    [
+                        ft.Text("Users", size=20),
+                        ft.ElevatedButton("Add User", on_click=self.add_user),
+                    ],
+                    alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+                ),
+                self.users_list,
+            ],
+            expand=True,
+        )
+        self.hydrate_users_list()
+
+    def hydrate_users_list(self):
+        self.users_list.controls.clear()
+        for user in self.store.get_users():
+            self.users_list.controls.append(
+                ft.ListTile(
+                    title=ft.Text(user["name"]),
+                    trailing=ft.IconButton(
+                        icon=ft.Icons.DELETE,
+                        on_click=lambda e, u=user: self.delete_user(u),
+                    ),
+                )
+            )
+        self.app.page.update()
+
+    def add_user(self, e):
+        def close_dlg(e):
+            if user_name.value and password.value:
+                new_user = User(user_name.value, password.value)
+                self.store.add_user(new_user)
+                self.hydrate_users_list()
+            self.app.page.close(dialog)
+
+        user_name = ft.TextField(label="Nome de usuário")
+        password = ft.TextField(label="Senha", password=True)
+        dialog = ft.AlertDialog(
+            title=ft.Text("Adicionar Novo Usuário"),
+            content=ft.Column(
+                [
+                    user_name,
+                    password,
+                    ft.ElevatedButton(text="Adicionar", on_click=close_dlg),
+                ],
+                tight=True,
+            ),
+        )
+        self.app.page.open(dialog)
+
+    def delete_user(self, user):
+        if user["name"] != "admin":
+            self.store.remove_user(user["name"])
+            self.hydrate_users_list()
+        else:
+            self.app.page.snack_bar = ft.SnackBar(ft.Text("Não é possível excluir o usuário admin!"), open=True)
+            self.app.page.update()
 
 class AppLayout(ft.Row):
     def __init__(self, app, page: ft.Page, store: DataStore, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.app = app
         self.page: ft.Page = page
-        self.page.on_resized = self.page_resize
         self.store: DataStore = store
         self.toggle_nav_rail_button = ft.IconButton(
             icon=ft.Icons.ARROW_CIRCLE_LEFT,
@@ -19,7 +84,7 @@ class AppLayout(ft.Row):
             on_click=self.toggle_nav_rail,
         )
         self.sidebar = Sidebar(self, self.store)
-        self.members_view = ft.Text("members view")
+        self.members_view = MembersView(self.app, self.store)
         self.all_boards_view = ft.Column(
             [
                 ft.Row(
@@ -103,7 +168,7 @@ class AppLayout(ft.Row):
 
     def set_members_view(self):
         self.active_view = self.members_view
-        self.sidebar.top_nav_rail.selected_index = 1
+        self.sidebar.top_nav_rail.selected_index = 1 if self.sidebar.is_admin() else 0
         self.sidebar.bottom_nav_rail.selected_index = None
         self.page.update()
 
