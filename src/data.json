@@ -14,17 +14,17 @@
                             "color": "amber500",
                             "items": [
                                 {
-                                    "id": 3,
-                                    "item_text": "fazer o tpc",
-                                    "priority": "Alta",
-                                    "description": "",
-                                    "completed": false
-                                },
-                                {
                                     "id": 4,
                                     "item_text": "teste",
                                     "priority": "M\u00e9dia",
                                     "description": "aaaa",
+                                    "completed": false
+                                },
+                                {
+                                    "id": 3,
+                                    "item_text": "fazer o tpc",
+                                    "priority": "Alta",
+                                    "description": "",
                                     "completed": false
                                 }
                             ]
@@ -37,8 +37,8 @@
                                 {
                                     "id": 3,
                                     "item_text": "aaa",
-                                    "priority": "M\u00c3\u00a9dia",
-                                    "description": "aa",
+                                    "priority": "M\u00e9dia",
+                                    "description": "",
                                     "completed": false
                                 }
                             ]

@@ -124,7 +124,11 @@ class Board(ft.Container):
             label="New List Name", on_submit=close_dlg, on_change=textfield_change
         )
         create_button = ft.ElevatedButton(
-            text="Create", bgcolor=ft.Colors.BLUE_200, on_click=close_dlg, disabled=True
+            text="Create",
+            bgcolor=ft.Colors.BLUE_200,
+            on_click=close_dlg,
+            disabled=True,
+            color=ft.Colors.BLACK,
         )
         dialog = ft.AlertDialog(
             title=ft.Text("Name your new list"),

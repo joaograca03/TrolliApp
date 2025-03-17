@@ -15,10 +15,20 @@ class TrelloApp(AppLayout):
         self.user: str | None = None
         self.boards = []
 
+        # Restaura o tema salvo ou usa LIGHT como padrão
+        saved_theme = self.page.client_storage.get("theme_mode")
+        if saved_theme == "DARK":
+            self.page.theme_mode = ft.ThemeMode.DARK
+        else:
+            self.page.theme_mode = ft.ThemeMode.LIGHT
+
         self.appbar_items = [
             ft.PopupMenuItem(text="Log in", on_click=self.login),
             ft.PopupMenuItem(),  # divisor
-            ft.PopupMenuItem(text="Settings"),
+            ft.PopupMenuItem(
+                text="Dark Mode" if self.page.theme_mode == ft.ThemeMode.LIGHT else "Light Mode",
+                on_click=self.toggle_theme
+            ),
         ]
 
         self.appbar = ft.AppBar(
@@ -32,7 +42,6 @@ class TrelloApp(AppLayout):
             ),
             center_title=False,
             toolbar_height=75,
-            bgcolor=ft.Colors.LIGHT_BLUE_ACCENT_700,
             actions=[
                 ft.Container(
                     content=ft.PopupMenuButton(items=self.appbar_items),
@@ -53,20 +62,61 @@ class TrelloApp(AppLayout):
         self.page.title = "Flet Trello clone"
         self.page.padding = 0
         self.page.theme = ft.Theme(font_family="Verdana")
-        self.page.theme_mode = ft.ThemeMode.LIGHT
+        self.page.theme_mode = self.page.theme_mode  # Usa o tema restaurado
         self.page.theme.page_transitions.windows = "cupertino"
         self.page.fonts = {"Pacifico": "Pacifico-Regular.ttf"}
-        self.page.bgcolor = ft.Colors.BLUE_GREY_200
         self.page.on_route_change = self.route_change
         self.page.appbar = self.appbar
 
+        self.update_theme_colors()  # Aplica as cores iniciais com base no tema
         self.initialize_login()
+
+    def update_theme_colors(self):
+        print(f"Atualizando cores do tema. Tema atual: {self.page.theme_mode}")
+        if self.page.theme_mode == ft.ThemeMode.DARK:
+            print("Aplicando tema escuro")
+            self.page.bgcolor = ft.Colors.GREY_900
+            self.sidebar.bgcolor = ft.Colors.GREY_800
+            self.appbar.bgcolor = ft.Colors.BLUE_GREY_900
+        else:
+            print("Aplicando tema claro")
+            self.page.bgcolor = ft.Colors.BLUE_GREY_200
+            self.sidebar.bgcolor = ft.Colors.BLUE_GREY
+            self.appbar.bgcolor = ft.Colors.LIGHT_BLUE_ACCENT_700
+
+        # Atualiza as views para refletir a cor de fundo da página
+        for view in self.page.views: 
+            view.bgcolor = self.page.bgcolor
+
+        # Atualiza apenas listas válidas com page definido
+        for board in self.store.get_boards():
+            for list_control in board.board_lists.controls[:-1]:  
+                if hasattr(list_control, 'page') and list_control.page is not None:
+                    list_control.update_theme()
+        self.page.update()
+        print(f"Cores aplicadas: page={self.page.bgcolor}, sidebar={self.sidebar.bgcolor}, appbar={self.appbar.bgcolor}")
+
+    def toggle_theme(self, e):
+        print(f"Alternando tema. Tema atual antes da mudança: {self.page.theme_mode}")
+        if self.page.theme_mode == ft.ThemeMode.LIGHT:
+            self.page.theme_mode = ft.ThemeMode.DARK
+            e.control.text = "Light Mode"
+            self.page.client_storage.set("theme_mode", "DARK")
+        else:
+            self.page.theme_mode = ft.ThemeMode.LIGHT
+            e.control.text = "Dark Mode"
+            self.page.client_storage.set("theme_mode", "LIGHT")
+        self.update_theme_colors()  # Atualiza as cores de fundo
+        print(f"Tema alternado para: {self.page.theme_mode}")
 
     def initialize_login(self):
         self.appbar_items = [
             ft.PopupMenuItem(text="Log in", on_click=self.login),
             ft.PopupMenuItem(),  # divisor
-            ft.PopupMenuItem(text="Settings"),
+            ft.PopupMenuItem(
+                text="Dark Mode" if self.page.theme_mode == ft.ThemeMode.LIGHT else "Light Mode",
+                on_click=self.toggle_theme
+            ),
         ]
         self.appbar.actions[0].content = ft.PopupMenuButton(items=self.appbar_items)
         self.page.views.clear()
@@ -84,7 +134,7 @@ class TrelloApp(AppLayout):
                         horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                     )
                 ],
-                bgcolor=ft.Colors.BLUE_GREY_200,
+                bgcolor=self.page.bgcolor,  # Usa a cor dinâmica da página
             )
         )
         self.page.route = "/login"
@@ -101,16 +151,17 @@ class TrelloApp(AppLayout):
             user = self.store.get_user(user_name.value)
             if user and user["password"] == password.value:
                 self.user = user_name.value
-                print(f"Usuário definido: {self.user}")
                 self.page.client_storage.set("current_user", user_name.value)
                 self.store.set_current_user(user)
                 self.boards = self.store.get_boards()
-                print(f"Boards encontrados: {self.boards}")
                 self.page.close(dialog)
                 self.appbar_items = [
-                    ft.PopupMenuItem(text=f"{self.user}'s Profile"),
-                    ft.PopupMenuItem(),  # divisor
-                    ft.PopupMenuItem(text="Settings"),
+                    ft.PopupMenuItem(content=ft.Text(f"{self.user}'s Profile")),
+                    ft.PopupMenuItem(),  # Divisor
+                    ft.PopupMenuItem(
+                        text="Dark Mode" if self.page.theme_mode == ft.ThemeMode.LIGHT else "Light Mode",
+                        on_click=self.toggle_theme
+                    ),
                     ft.PopupMenuItem(text="Logout", on_click=self.logout),
                 ]
                 self.appbar.actions[0].content = ft.PopupMenuButton(items=self.appbar_items)
@@ -120,13 +171,12 @@ class TrelloApp(AppLayout):
                         "/boards",
                         [self.appbar, self],
                         padding=ft.padding.all(0),
-                        bgcolor=ft.Colors.BLUE_GREY_200,
+                        bgcolor=self.page.bgcolor,  
                     )
                 )
                 self.page.update()
                 self.hydrate_all_boards_view()
                 self.sidebar.sync_board_destinations()
-                self.sidebar.refresh()  # Atualiza a sidebar após login
                 if len(self.boards) == 0:
                     self.create_new_board("My First Board")
                 self.page.route = "/boards"
@@ -196,7 +246,10 @@ class TrelloApp(AppLayout):
         self.appbar_items = [
             ft.PopupMenuItem(text="Log in", on_click=self.login),
             ft.PopupMenuItem(),  # divisor
-            ft.PopupMenuItem(text="Settings"),
+            ft.PopupMenuItem(
+                text="Dark Mode" if self.page.theme_mode == ft.ThemeMode.LIGHT else "Light Mode",
+                on_click=self.toggle_theme
+            ),
         ]
         self.appbar.actions[0].content = ft.PopupMenuButton(items=self.appbar_items)
         self.page.views.clear()
@@ -214,10 +267,9 @@ class TrelloApp(AppLayout):
                         horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                     )
                 ],
-                bgcolor=ft.Colors.BLUE_GREY_200,
+                bgcolor=self.page.bgcolor,  # Usa a cor dinâmica da página
             )
         )
-        self.sidebar.refresh()  # Atualiza a sidebar após logout
         self.page.route = "/login"
         self.page.update()
 

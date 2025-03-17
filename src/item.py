@@ -27,12 +27,12 @@ class Item(ft.Container):
         self.description = description
         self.completed = completed
 
-        # Layout da card
         self.checkbox = ft.Checkbox(
             label=f"{self.item_text}",
             width=200,
             value=self.completed,
-            on_change=self.update_status
+            on_change=self.update_status,
+            label_style=ft.TextStyle(color=ft.Colors.BLACK),
         )
         self.card_item = ft.Card(
             content=ft.Column(

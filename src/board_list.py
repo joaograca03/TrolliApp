@@ -83,19 +83,20 @@ class BoardList(ft.Container):
                         controls=[self.priority_filter, self.status_filter],
                         spacing=10,
                     ),
-                    expanded=False,  # Inicia minimizado
+                    expanded=False,  
                 )
             ],
-            elevation=0,  # Sem sombra para manter simples
-            divider_color=ft.Colors.TRANSPARENT,  # Remove divisores extras
+            elevation=0,  
+            divider_color=ft.Colors.TRANSPARENT,  
         )
 
-        # Botão para criar nova tarefa
         self.create_task_button = ft.ElevatedButton(
             text="Create Task",
             icon=ft.Icons.ADD,
             on_click=self.open_create_task_modal,
             bgcolor=ft.Colors.BLUE_200,
+            color=ft.Colors.BLACK,
+            icon_color=ft.Colors.BLACK,
         )
 
         self.end_indicator = ft.Container(
@@ -126,6 +127,7 @@ class BoardList(ft.Container):
                     text_align=ft.TextAlign.LEFT,
                     overflow=ft.TextOverflow.CLIP,
                     expand=True,
+                    color=ft.Colors.BLACK,
                 ),
                 ft.Container(
                     ft.PopupMenuButton(
@@ -159,6 +161,7 @@ class BoardList(ft.Container):
                                 )
                             ),
                         ],
+                        icon_color=ft.Colors.BLACK,
                     ),
                     padding=ft.padding.only(right=-10),
                 ),
@@ -182,7 +185,7 @@ class BoardList(ft.Container):
             width=250,
             border=ft.border.all(2, ft.Colors.BLACK12),
             border_radius=ft.border_radius.all(5),
-            bgcolor=self.color if (self.color != "") else ft.Colors.BACKGROUND,
+            bgcolor=self.color if self.color else ft.Colors.BACKGROUND,
             padding=ft.padding.only(bottom=10, right=10, left=10, top=5),
         )
 
@@ -205,6 +208,13 @@ class BoardList(ft.Container):
             on_leave=self.item_drag_leave,
         )
         super().__init__(content=self.view, data=self)
+
+    def update_theme(self):
+        if self.page.theme_mode == ft.ThemeMode.DARK:
+            self.inner_list.bgcolor = ft.Colors.GREY_800 if not self.color else self.color
+        else:
+            self.inner_list.bgcolor = self.color if self.color else ft.Colors.BACKGROUND
+        self.update()
 
     def apply_filters(self, e):
         for item_control in self.items.controls:
