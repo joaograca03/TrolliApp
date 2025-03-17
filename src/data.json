@@ -14,16 +14,16 @@
                             "color": "amber500",
                             "items": [
                                 {
-                                    "id": 4,
-                                    "item_text": "teste",
-                                    "priority": "M\u00e9dia",
-                                    "description": "aaaa",
-                                    "completed": false
-                                },
-                                {
                                     "id": 3,
                                     "item_text": "fazer o tpc",
                                     "priority": "Alta",
+                                    "description": "",
+                                    "completed": false
+                                },
+                                {
+                                    "id": 4,
+                                    "item_text": "aaa",
+                                    "priority": "M\u00e9dia",
                                     "description": "",
                                     "completed": false
                                 }
@@ -33,15 +33,7 @@
                             "id": 1,
                             "title": "em progresso",
                             "color": "purple100",
-                            "items": [
-                                {
-                                    "id": 3,
-                                    "item_text": "aaa",
-                                    "priority": "M\u00e9dia",
-                                    "description": "",
-                                    "completed": false
-                                }
-                            ]
+                            "items": []
                         },
                         {
                             "id": 12,
@@ -156,7 +148,28 @@
                 {
                     "id": 1,
                     "name": "My First Board",
-                    "lists": []
+                    "lists": [
+                        {
+                            "id": 2,
+                            "title": "teste",
+                            "color": "teal500",
+                            "items": [
+                                {
+                                    "id": 3,
+                                    "item_text": "teste",
+                                    "priority": "Alta",
+                                    "description": "1adawd",
+                                    "completed": false
+                                }
+                            ]
+                        },
+                        {
+                            "id": 3,
+                            "title": "teste1",
+                            "color": "pink300",
+                            "items": []
+                        }
+                    ]
                 }
             ]
         }

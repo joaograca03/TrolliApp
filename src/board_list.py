@@ -151,15 +151,6 @@ class BoardList(ft.Container):
                                 ),
                                 on_click=self.delete_list,
                             ),
-                            ft.PopupMenuItem(),
-                            ft.PopupMenuItem(
-                                content=ft.Text(
-                                    value="Move List",
-                                    theme_style=ft.TextThemeStyle.LABEL_MEDIUM,
-                                    text_align=ft.TextAlign.CENTER,
-                                    color=self.color,
-                                )
-                            ),
                         ],
                         icon_color=ft.Colors.BLACK,
                     ),

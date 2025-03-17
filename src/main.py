@@ -72,14 +72,11 @@ class TrelloApp(AppLayout):
         self.initialize_login()
 
     def update_theme_colors(self):
-        print(f"Atualizando cores do tema. Tema atual: {self.page.theme_mode}")
         if self.page.theme_mode == ft.ThemeMode.DARK:
-            print("Aplicando tema escuro")
             self.page.bgcolor = ft.Colors.GREY_900
             self.sidebar.bgcolor = ft.Colors.GREY_800
             self.appbar.bgcolor = ft.Colors.BLUE_GREY_900
         else:
-            print("Aplicando tema claro")
             self.page.bgcolor = ft.Colors.BLUE_GREY_200
             self.sidebar.bgcolor = ft.Colors.BLUE_GREY
             self.appbar.bgcolor = ft.Colors.LIGHT_BLUE_ACCENT_700
@@ -94,7 +91,6 @@ class TrelloApp(AppLayout):
                 if hasattr(list_control, 'page') and list_control.page is not None:
                     list_control.update_theme()
         self.page.update()
-        print(f"Cores aplicadas: page={self.page.bgcolor}, sidebar={self.sidebar.bgcolor}, appbar={self.appbar.bgcolor}")
 
     def toggle_theme(self, e):
         if self.page.theme_mode == ft.ThemeMode.LIGHT:
@@ -163,7 +159,7 @@ class TrelloApp(AppLayout):
                         text="Dark Mode" if self.page.theme_mode == ft.ThemeMode.LIGHT else "Light Mode",
                         on_click=self.toggle_theme
                     ),
-                    ft.PopupMenuItem(text="Logout", on_click=self.logout),
+                    ft.PopupMenuItem(text="Close App", on_click=self.close_app),  # Novo botão
                 ]
                 self.appbar.actions[0].content = ft.PopupMenuButton(items=self.appbar_items)
                 self.page.views.clear()
@@ -199,7 +195,6 @@ class TrelloApp(AppLayout):
                 ],
                 tight=True,
             ),
-            on_dismiss=lambda e: print("Diálogo fechado!"),
         )
         self.page.open(dialog)
 
@@ -218,7 +213,6 @@ class TrelloApp(AppLayout):
 
             new_user = User(user_name.value, password.value)
             self.store.add_user(new_user)
-            print(f"Novo usuário registrado: {user_name.value}")
             self.page.close(dialog)
             self.page.snack_bar = ft.SnackBar(ft.Text("Usuário registrado com sucesso!"), open=True)
             self.page.update()
@@ -235,49 +229,14 @@ class TrelloApp(AppLayout):
                 ],
                 tight=True,
             ),
-            on_dismiss=lambda e: print("Diálogo de registro fechado!"),
         )
         self.page.open(dialog)
 
-    def logout(self, e):
-        print(f"Logout do usuário: {self.user}")
-        self.user = None
-        self.page.client_storage.remove("current_user")
-        self.store.set_current_user(None)
-        self.boards = []
-        self.appbar_items = [
-            ft.PopupMenuItem(text="Log in", on_click=self.login),
-            ft.PopupMenuItem(),  # divisor
-            ft.PopupMenuItem(
-                text="Dark Mode" if self.page.theme_mode == ft.ThemeMode.LIGHT else "Light Mode",
-                on_click=self.toggle_theme
-            ),
-        ]
-        self.appbar.actions[0].content = ft.PopupMenuButton(items=self.appbar_items)
-        self.page.views.clear()
-        self.page.views.append(
-            ft.View(
-                "/login",
-                [
-                    ft.Column(
-                        [
-                            ft.Text("Bem-vindo ao Trolli", size=30, font_family="Pacifico"),
-                            ft.ElevatedButton("Fazer Login", on_click=self.login),
-                            ft.ElevatedButton("Registrar", on_click=self.register),
-                        ],
-                        alignment=ft.MainAxisAlignment.CENTER,
-                        horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-                    )
-                ],
-                bgcolor=self.page.bgcolor,  # Usa a cor dinâmica da página
-            )
-        )
-        self.page.route = "/login"
-        self.page.update()
+    def close_app(self, e):
+        self.page.window.close()  # Fecha a janela do aplicativo
 
     def route_change(self, e):
         if self.page is None:
-            print("Erro: self.page é None no route_change")
             return
         troute = ft.TemplateRoute(self.page.route)
         
@@ -343,7 +302,6 @@ class TrelloApp(AppLayout):
                 ],
                 tight=True,
             ),
-            on_dismiss=lambda e: print("Modal dialog dismissed!"),
         )
         self.page.open(dialog)
         dialog.open = True
@@ -351,11 +309,9 @@ class TrelloApp(AppLayout):
         dialog_text.focus()
 
     def create_new_board(self, board_name):
-        print(f"Criando novo board: {board_name}")
         new_board = Board(self, self.store, board_name, self.page)
         self.store.add_board(new_board)
         self.boards = self.store.get_boards()
-        print(f"Board '{board_name}' adicionado ao JSON.")
         self.hydrate_all_boards_view()
         self.sidebar.sync_board_destinations()
 
@@ -371,6 +327,4 @@ def main(page: ft.Page):
     store.app = app
     page.add(app)
 
-print("flet version: ", ft.version.version)
-print("flet path: ", ft.__file__)
 ft.app(target=main, assets_dir="../assets")
