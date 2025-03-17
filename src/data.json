@@ -1,0 +1,61 @@
+{
+    "users": [
+        {
+            "name": "joao",
+            "password": "123",
+            "boards": [
+                {
+                    "id": 1,
+                    "name": "Meu Primeiro Board",
+                    "lists": [
+                        {
+                            "id": 0,
+                            "title": "teste1232",
+                            "color": "pink300",
+                            "items": [
+                                {
+                                    "id": 6,
+                                    "item_text": "teste",
+                                    "priority": "Baixa",
+                                    "description": "",
+                                    "completed": false
+                                }
+                            ]
+                        },
+                        {
+                            "id": 1,
+                            "title": "ola",
+                            "color": "amber500",
+                            "items": [
+                                {
+                                    "id": 6,
+                                    "item_text": "ola",
+                                    "priority": "Baixa",
+                                    "description": "",
+                                    "completed": false
+                                },
+                                {
+                                    "id": 6,
+                                    "item_text": "teste",
+                                    "priority": "Baixa",
+                                    "description": "",
+                                    "completed": false
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "id": 2,
+                    "name": "teste",
+                    "lists": []
+                },
+                {
+                    "id": 3,
+                    "name": "teste1213",
+                    "lists": []
+                }
+            ]
+        }
+    ]
+}

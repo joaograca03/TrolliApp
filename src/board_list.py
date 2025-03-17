@@ -1,12 +1,11 @@
 from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from board import Board
 import itertools
 import flet as ft
 from item import Item
 from data_store import DataStore
 
+if TYPE_CHECKING:
+    from board import Board
 
 class BoardList(ft.Container):
     id_counter = itertools.count()
@@ -18,15 +17,37 @@ class BoardList(ft.Container):
         title: str,
         page: ft.Page,
         color: str = "",
+        board_list_id: int = None,  # Adicionado para suportar IDs do JSON
     ):
         self.page: ft.Page = page
-        self.board_list_id = next(BoardList.id_counter)
+        self.board_list_id = board_list_id if board_list_id is not None else next(BoardList.id_counter)
         self.store: DataStore = store
         self.board = board
         self.title = title
         self.color = color
         self.items = ft.Column([], tight=True, spacing=4)
-        self.items.controls = self.store.get_items(self.board_list_id)
+
+        # Carrega itens existentes do store para esta lista
+        for item_data in self.store.get_items(self.board_list_id):
+            new_item = Item(
+                list=self,
+                store=self.store,
+                item_text=item_data["item_text"],
+                priority=item_data["priority"],
+                item_id=item_data["id"],
+                completed=item_data["completed"]  # Suporte para status concluído
+            )
+            self.items.controls.append(
+                ft.Column([ft.Container(
+                    bgcolor=ft.Colors.BLACK26,
+                    border_radius=ft.border_radius.all(30),
+                    height=3,
+                    alignment=ft.alignment.center_right,
+                    width=200,
+                    opacity=0.0,
+                ), new_item])
+            )
+
         self.new_item_field = ft.TextField(
             label="new card name",
             height=50,
@@ -34,7 +55,6 @@ class BoardList(ft.Container):
             on_submit=self.add_item_handler,
         )
 
-        # Dropdown para selecionar a prioridade ao criar uma card
         self.priority_dropdown = ft.Dropdown(
             options=[
                 ft.dropdown.Option("Baixa"),
@@ -45,7 +65,6 @@ class BoardList(ft.Container):
             width=150,
         )
 
-        # Controles de filtro
         self.priority_filter = ft.Dropdown(
             options=[
                 ft.dropdown.Option("Todas"),
@@ -139,7 +158,6 @@ class BoardList(ft.Container):
             alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
         )
 
-        # Adicionar os filtros em uma coluna (um abaixo do outro)
         self.filter_column = ft.Column(
             controls=[self.priority_filter, self.status_filter],
             spacing=10,
@@ -149,7 +167,7 @@ class BoardList(ft.Container):
             content=ft.Column(
                 [
                     self.header,
-                    self.filter_column,  # Adicionar os filtros aqui
+                    self.filter_column,
                     self.new_item_field,
                     self.priority_dropdown,
                     ft.TextButton(
@@ -197,17 +215,14 @@ class BoardList(ft.Container):
         super().__init__(content=self.view, data=self)
 
     def apply_filters(self, e):
-        # Aplicar os filtros e atualizar a exibição das cards
         for item_control in self.items.controls:
             item = item_control.controls[1]  # Acessar o conteúdo da card
             item_visible = True
 
-            # Filtrar por prioridade
             if self.priority_filter.value != "Todas":
                 if item.priority != self.priority_filter.value:
                     item_visible = False
 
-            # Filtrar por estado (concluído/não concluído)
             if self.status_filter.value != "Todas":
                 is_completed = item.checkbox.value
                 if self.status_filter.value == "Concluídas" and not is_completed:
@@ -215,7 +230,6 @@ class BoardList(ft.Container):
                 elif self.status_filter.value == "Não Concluídas" and is_completed:
                     item_visible = False
 
-            # Atualizar a visibilidade da card
             item_control.visible = item_visible
 
         self.page.update()
@@ -285,7 +299,6 @@ class BoardList(ft.Container):
         chosen_control: ft.Draggable | None = None,
         swap_control: ft.Draggable | None = None,
     ):
-
         controls_list = [x.controls[1] for x in self.items.controls]
         to_index = (
             controls_list.index(swap_control) if swap_control in controls_list else None
@@ -308,18 +321,13 @@ class BoardList(ft.Container):
             ]
         )
 
-        # rearrange (i.e. drag drop from same list)
         if (from_index is not None) and (to_index is not None):
             self.items.controls.insert(to_index, self.items.controls.pop(from_index))
             self.set_indicator_opacity(swap_control, 0.0)
-
-        # insert (drag from other list to middle of this list)
         elif to_index is not None:
             new_item = Item(self, self.store, item, self.priority_dropdown.value)
             control_to_add.controls.append(new_item)
             self.items.controls.insert(to_index, control_to_add)
-
-        # add new (drag from other list to end of this list, or use add item button)
         else:
             new_item = (
                 Item(self, self.store, item, self.priority_dropdown.value)

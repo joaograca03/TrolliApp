@@ -115,6 +115,9 @@ class AppLayout(ft.Row):
         self.page.update()
 
     def hydrate_all_boards_view(self):
+        print("Atualizando a visualização de todos os boards")
+        boards = self.store.get_boards()
+        print(f"Boards encontrados: {boards}")
         self.all_boards_view.controls[-1] = ft.Row(
             [
                 ft.Container(
@@ -161,14 +164,21 @@ class AppLayout(ft.Row):
                     width=250,
                     data=b,
                 )
-                for b in self.store.get_boards()
+                for b in boards
             ],
             wrap=True,
         )
         self.sidebar.sync_board_destinations()
+        self.page.update()
 
     def board_click(self, e):
-        self.sidebar.bottom_nav_change(self.store.get_boards().index(e.control.data))
+        clicked_board = e.control.data
+        boards = self.store.get_boards()
+        board_index = next((i for i, b in enumerate(boards) if b.board_id == clicked_board.board_id), None)
+        if board_index is not None:
+            self.sidebar.bottom_nav_change(board_index)
+        else:
+            print(f"Erro: Board com ID {clicked_board.board_id} não encontrado na lista de boards.")
 
     def toggle_nav_rail(self, e):
         self.sidebar.visible = not self.sidebar.visible

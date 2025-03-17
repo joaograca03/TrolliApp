@@ -2,14 +2,17 @@ import itertools
 import flet as ft
 from board_list import BoardList
 from data_store import DataStore
+from typing import TYPE_CHECKING
 
+if TYPE_CHECKING:
+    from trello_app import TrelloApp
 
 class Board(ft.Container):
-    id_counter = itertools.count()
+    id_counter = itertools.count(start=1)  # Começa em 1
 
-    def __init__(self, app, store: DataStore, name: str, page: ft.Page):
+    def __init__(self, app: "TrelloApp", store: DataStore, name: str, page: ft.Page, board_id=None, lists=None):
         self.page: ft.Page = page
-        self.board_id = next(Board.id_counter)
+        self.board_id = board_id if board_id is not None else next(Board.id_counter)  # Usa ID do JSON ou novo ID
         self.store: DataStore = store
         self.app = app
         self.name = name
@@ -25,8 +28,29 @@ class Board(ft.Container):
             width=(self.app.page.width - 310),
             height=(self.app.page.height - 95),
         )
-        for l in self.store.get_lists_by_board(self.board_id):
-            self.add_list(l)
+
+        if lists:
+            for list_data in lists:
+                board_list = BoardList(
+                    board=self,
+                    store=self.store,
+                    title=list_data["title"],
+                    page=self.page,
+                    color=list_data["color"],
+                    board_list_id=list_data["id"]
+                )
+                self.board_lists.controls.insert(-1, board_list)
+        else:
+            for list_data in self.store.get_lists_by_board(self.board_id):
+                board_list = BoardList(
+                    board=self,
+                    store=self.store,
+                    title=list_data["title"],
+                    page=self.page,
+                    color=list_data["color"],
+                    board_list_id=list_data["id"]
+                )
+                self.board_lists.controls.insert(-1, board_list)
 
         super().__init__(
             content=self.board_lists,
@@ -42,7 +66,6 @@ class Board(ft.Container):
         self.update()
 
     def create_list(self, e):
-
         option_dict = {
             ft.Colors.LIGHT_GREEN: self.color_option_creator(ft.Colors.LIGHT_GREEN),
             ft.Colors.RED_200: self.color_option_creator(ft.Colors.RED_200),
@@ -50,9 +73,7 @@ class Board(ft.Container):
             ft.Colors.PINK_300: self.color_option_creator(ft.Colors.PINK_300),
             ft.Colors.ORANGE_300: self.color_option_creator(ft.Colors.ORANGE_300),
             ft.Colors.LIGHT_BLUE: self.color_option_creator(ft.Colors.LIGHT_BLUE),
-            ft.Colors.DEEP_ORANGE_300: self.color_option_creator(
-                ft.Colors.DEEP_ORANGE_300
-            ),
+            ft.Colors.DEEP_ORANGE_300: self.color_option_creator(ft.Colors.DEEP_ORANGE_300),
             ft.Colors.PURPLE_100: self.color_option_creator(ft.Colors.PURPLE_100),
             ft.Colors.RED_700: self.color_option_creator(ft.Colors.RED_700),
             ft.Colors.TEAL_500: self.color_option_creator(ft.Colors.TEAL_500),
@@ -83,10 +104,10 @@ class Board(ft.Container):
                 type(e.control) is ft.TextField and e.control.value != ""
             ):
                 new_list = BoardList(
-                    self,
-                    self.store,
-                    dialog_text.value,
-                    self.page,
+                    board=self,
+                    store=self.store,
+                    title=dialog_text.value,
+                    page=self.page,
                     color=color_options.data,
                 )
                 self.add_list(new_list)
@@ -134,7 +155,7 @@ class Board(ft.Container):
         self.store.remove_list(self.board_id, list.board_list_id)
         self.page.update()
 
-    def add_list(self, list):
+    def add_list(self, list: BoardList):
         self.board_lists.controls.insert(-1, list)
         self.store.add_list(self.board_id, list)
         self.page.update()
