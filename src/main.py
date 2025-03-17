@@ -14,7 +14,7 @@ class TrelloApp(AppLayout):
         self.store: DataStore = store
         self.user: str | None = None
         self.page.on_route_change = self.route_change
-        self.boards = []  # Inicializa vazio, será preenchido após login
+        self.boards = []  
         self.login_profile_button = ft.PopupMenuItem(text="Log in", on_click=self.login)
         self.appbar_items = [
             self.login_profile_button,

@@ -150,7 +150,13 @@ class Item(ft.Container):
             e.control.update()
             return
 
-        self.list.add_item(src.data.item_text, swap_control=self)
+        self.list.add_item(
+            item_text=src.data.item_text,
+            priority=src.data.priority,
+            description=src.data.description,
+            completed=src.data.completed,
+            swap_control=self
+        )
         src.data.list.remove_item(src.data)
         self.list.set_indicator_opacity(self, 0.0)
         self.card_item.elevation = 1

@@ -17,7 +17,7 @@ class BoardList(ft.Container):
         title: str,
         page: ft.Page,
         color: str = "",
-        board_list_id: int = None,  # Adicionado para suportar IDs do JSON
+        board_list_id: int = None,
     ):
         self.page: ft.Page = page
         self.board_list_id = board_list_id if board_list_id is not None else next(BoardList.id_counter)
@@ -27,7 +27,6 @@ class BoardList(ft.Container):
         self.color = color
         self.items = ft.Column([], tight=True, spacing=4)
 
-        # Carrega itens existentes do store para esta lista
         for item_data in self.store.get_items(self.board_list_id):
             new_item = Item(
                 list=self,
@@ -35,7 +34,7 @@ class BoardList(ft.Container):
                 item_text=item_data["item_text"],
                 priority=item_data["priority"],
                 item_id=item_data["id"],
-                completed=item_data["completed"]  # Suporte para status concluído
+                completed=item_data["completed"]
             )
             self.items.controls.append(
                 ft.Column([ft.Container(
@@ -61,7 +60,7 @@ class BoardList(ft.Container):
                 ft.dropdown.Option("Média"),
                 ft.dropdown.Option("Alta"),
             ],
-            value="Baixa",  # Valor padrão
+            value="Baixa",
             width=150,
         )
 
@@ -72,7 +71,7 @@ class BoardList(ft.Container):
                 ft.dropdown.Option("Média"),
                 ft.dropdown.Option("Alta"),
             ],
-            value="Todas",  # Valor padrão (sem filtro)
+            value="Todas",
             label="Filtrar por Prioridade",
             width=150,
             on_change=self.apply_filters,
@@ -84,7 +83,7 @@ class BoardList(ft.Container):
                 ft.dropdown.Option("Concluídas"),
                 ft.dropdown.Option("Não Concluídas"),
             ],
-            value="Todas",  # Valor padrão (sem filtro)
+            value="Todas",
             label="Filtrar por Estado",
             width=150,
             on_change=self.apply_filters,
@@ -216,7 +215,7 @@ class BoardList(ft.Container):
 
     def apply_filters(self, e):
         for item_control in self.items.controls:
-            item = item_control.controls[1]  # Acessar o conteúdo da card
+            item = item_control.controls[1]
             item_visible = True
 
             if self.priority_filter.value != "Todas":
@@ -236,7 +235,12 @@ class BoardList(ft.Container):
 
     def item_drag_accept(self, e):
         src = self.page.get_control(e.src_id)
-        self.add_item(src.data.item_text)
+        self.add_item(
+            item_text=src.data.item_text,
+            priority=src.data.priority,
+            description=src.data.description,
+            completed=src.data.completed
+        )
         src.data.list.remove_item(src.data)
         self.end_indicator.opacity = 0.0
         self.update()
@@ -295,7 +299,10 @@ class BoardList(ft.Container):
 
     def add_item(
         self,
-        item: str | None = None,
+        item_text: str | None = None,
+        priority: str = "Baixa",
+        description: str = "",
+        completed: bool = False,
         chosen_control: ft.Draggable | None = None,
         swap_control: ft.Draggable | None = None,
     ):
@@ -325,14 +332,35 @@ class BoardList(ft.Container):
             self.items.controls.insert(to_index, self.items.controls.pop(from_index))
             self.set_indicator_opacity(swap_control, 0.0)
         elif to_index is not None:
-            new_item = Item(self, self.store, item, self.priority_dropdown.value)
+            new_item = Item(
+                self,
+                self.store,
+                item_text,
+                priority,
+                description,
+                completed=completed
+            )
             control_to_add.controls.append(new_item)
             self.items.controls.insert(to_index, control_to_add)
         else:
             new_item = (
-                Item(self, self.store, item, self.priority_dropdown.value)
-                if item
-                else Item(self, self.store, self.new_item_field.value, self.priority_dropdown.value)
+                Item(
+                    self,
+                    self.store,
+                    item_text,
+                    priority,
+                    description,
+                    completed=completed
+                )
+                if item_text
+                else Item(
+                    self,
+                    self.store,
+                    self.new_item_field.value,
+                    self.priority_dropdown.value,
+                    "",
+                    completed=False
+                )
             )
             control_to_add.controls.append(new_item)
             self.items.controls.append(control_to_add)
