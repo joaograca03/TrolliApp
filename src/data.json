@@ -14,14 +14,11 @@
                             "color": "amber500",
                             "items": [
                                 {
-                                    "id": 4,
-                                    "item_text": "aaa",
+                                    "id": 2,
+                                    "item_text": "teste123",
                                     "priority": "M\u00e9dia",
-                                    "description": "",
-                                    "tags": [
-                                        "teste",
-                                        "test2"
-                                    ],
+                                    "description": "aaa",
+                                    "tags": [],
                                     "completed": false
                                 }
                             ]

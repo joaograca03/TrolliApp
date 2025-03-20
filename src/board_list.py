@@ -76,7 +76,6 @@ class BoardList(ft.Container):
             on_change=self.apply_filters,
         )
 
-        # Botão para abrir o diálogo de seleção de tags
         self.tags_filter_button = ft.ElevatedButton(
             text="Selecionar Tags",
             on_click=self.open_tags_filter_dialog,
@@ -84,7 +83,7 @@ class BoardList(ft.Container):
             bgcolor=ft.Colors.BLUE_200,
             color=ft.Colors.BLACK,
         )
-        self.selected_tags = []  # Lista para armazenar as tags selecionadas
+        self.selected_tags = []
 
         self.filter_panel = ft.ExpansionPanelList(
             controls=[
@@ -219,7 +218,6 @@ class BoardList(ft.Container):
         self.update()
 
     def get_all_tags(self):
-        # Recolhe todas as tags únicas da lista
         all_tags = set()
         for item_control in self.items.controls:
             item = item_control.controls[1]
@@ -227,7 +225,6 @@ class BoardList(ft.Container):
         return sorted(all_tags)
 
     def open_tags_filter_dialog(self, e):
-        # Cria um diálogo para selecionar tags
         all_tags = self.get_all_tags()
         if not all_tags:
             self.page.snack_bar = ft.SnackBar(ft.Text("Nenhuma tag disponível nesta lista."), open=True)
@@ -263,7 +260,6 @@ class BoardList(ft.Container):
         self.page.open(dialog)
 
     def update_selected_tags(self, e):
-        # Atualiza a lista de tags selecionadas dinamicamente (opcional, para feedback imediato)
         pass
 
     def apply_filters(self, e):
@@ -271,12 +267,10 @@ class BoardList(ft.Container):
             item = item_control.controls[1]
             item_visible = True
 
-            # Filtro por prioridade
             if self.priority_filter.value != "Todas":
                 if item.priority != self.priority_filter.value:
                     item_visible = False
 
-            # Filtro por estado
             if self.status_filter.value != "Todas":
                 is_completed = item.checkbox.value
                 if self.status_filter.value == "Concluídas" and not is_completed:
@@ -284,8 +278,7 @@ class BoardList(ft.Container):
                 elif self.status_filter.value == "Não Concluídas" and is_completed:
                     item_visible = False
 
-            # Filtro por tags
-            if self.selected_tags:  # Só aplica se houver tags selecionadas
+            if self.selected_tags:
                 if not any(tag in item.tags for tag in self.selected_tags):
                     item_visible = False
 

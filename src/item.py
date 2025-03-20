@@ -16,7 +16,7 @@ class Item(ft.Container):
         item_text: str,
         priority: str = "Baixa",
         description: str = "",
-        tags: list[str] = None,  # Novo campo para tags
+        tags: list[str] = None,
         item_id: int = None,
         completed: bool = False
     ):
@@ -28,6 +28,7 @@ class Item(ft.Container):
         self.description = description
         self.tags = tags if tags is not None else []  # Lista de tags, vazia por padrão
         self.completed = completed
+        self.page = list.page  # Atribui self.page diretamente do BoardList
 
         self.checkbox = ft.Checkbox(
             label=f"{self.item_text}",
@@ -36,14 +37,13 @@ class Item(ft.Container):
             on_change=self.update_status,
             label_style=ft.TextStyle(color=ft.Colors.BLACK),
         )
+
         self.card_item = ft.Card(
             content=ft.Column(
                 [
                     ft.Container(
                         content=ft.Row(
-                            [
-                                self.checkbox,
-                            ],
+                            [self.checkbox],
                             alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
                         ),
                         border_radius=ft.border_radius.all(5),
@@ -87,13 +87,39 @@ class Item(ft.Container):
                 self.checkbox.label = self.item_text
                 self.priority = priority_dropdown.value
                 self.description = description_field.value
-                self.tags = [tag.strip() for tag in tags_field.value.split(",") if tag.strip()]  # Converte texto em lista
+                self.tags = [tag.strip() for tag in tags_field.value.split(",") if tag.strip()]
                 self.card_item.color = self.get_priority_color()
                 self.store.remove_item(self.list.board_list_id, self.item_id)
                 self.store.add_item(self.list.board_list_id, self)
                 self.list.apply_filters(None)
-                self.page.update()
-            self.page.close(dialog)
+                self.list.page.update()  # Usa list.page para garantir
+            self.list.page.close(dialog)
+
+        def open_delete_confirmation(e):
+            def confirm_delete(e):
+                self.list.remove_item(self)
+                self.list.page.close(confirm_dialog)  # Fecha o modal de confirmação primeiro
+                self.list.page.close(dialog)  # Fecha o modal de edição depois
+                snack_bar = ft.SnackBar(
+                    content=ft.Text(f"Item '{self.item_text}' removido com sucesso!"),
+                    open=True
+                )
+                self.list.page.snack_bar = snack_bar
+                self.list.page.update()
+
+            def cancel_delete(e):
+                self.list.page.close(confirm_dialog)  # Fecha apenas o modal de confirmação
+
+            confirm_dialog = ft.AlertDialog(
+                title=ft.Text("Confirmar Exclusão"),
+                content=ft.Text(f"Tem certeza que deseja excluir o item '{self.item_text}'?"),
+                actions=[
+                    ft.ElevatedButton("Cancelar", on_click=cancel_delete),
+                    ft.ElevatedButton("Excluir", bgcolor=ft.Colors.RED_200, on_click=confirm_delete),
+                ],
+                actions_alignment=ft.MainAxisAlignment.END,
+            )
+            self.list.page.open(confirm_dialog)
 
         name_field = ft.TextField(label="Nome da Tarefa", value=self.item_text)
         priority_dropdown = ft.Dropdown(
@@ -119,6 +145,12 @@ class Item(ft.Container):
             value=", ".join(self.tags),
             width=200,
         )
+        delete_button = ft.ElevatedButton(
+            text="Excluir",
+            bgcolor=ft.Colors.RED_200,
+            color=ft.Colors.WHITE,
+            on_click=open_delete_confirmation
+        )
 
         dialog = ft.AlertDialog(
             title=ft.Text("Detalhes da Tarefa"),
@@ -128,21 +160,26 @@ class Item(ft.Container):
                     priority_dropdown,
                     description_field,
                     tags_field,
-                    ft.ElevatedButton(text="Guardar", on_click=close_dlg),
+                    ft.Row(
+                        [
+                            delete_button,
+                            ft.ElevatedButton(text="Guardar", on_click=close_dlg),
+                        ],
+                        alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+                    ),
                 ],
                 tight=True,
                 spacing=10,
             ),
         )
-        self.page = self.list.page
-        self.page.open(dialog)
+        self.list.page.open(dialog)  # Usa list.page em vez de self.page
 
     def update_status(self, e):
         self.completed = self.checkbox.value
         self.store.remove_item(self.list.board_list_id, self.item_id)
         self.store.add_item(self.list.board_list_id, self)
         self.list.apply_filters(None)
-        self.page.update()
+        self.list.page.update()
 
     def drag_accept(self, e):
         src = self.page.get_control(e.src_id)
@@ -163,22 +200,22 @@ class Item(ft.Container):
             item_text=src.data.item_text,
             priority=src.data.priority,
             description=src.data.description,
-            tags=src.data.tags,  # Passa as tags ao mover
+            tags=src.data.tags,
             completed=src.data.completed,
             swap_control=self
         )
         src.data.list.remove_item(src.data)
         self.list.set_indicator_opacity(self, 0.0)
         self.card_item.elevation = 1
-        self.page.update()
+        self.list.page.update()
 
     def drag_will_accept(self, e):
         if e.data == "true":
             self.list.set_indicator_opacity(self, 1.0)
         self.card_item.elevation = 20 if e.data == "true" else 1
-        self.page.update()
+        self.list.page.update()
 
     def drag_leave(self, e):
         self.list.set_indicator_opacity(self, 0.0)
         self.card_item.elevation = 1
-        self.page.update()
+        self.list.page.update()
