@@ -30,11 +30,11 @@ Seguem-se as funcionalidades adicionais implementadas, com uma explicação dos 
 
 **Descrição**: Cada lista inclui um painel expansível com dois menus suspensos (*dropdowns*) e um botão para filtros: um *dropdown* para filtrar por estado ("Todas", "Concluídas", "Não Concluídas"), outro por prioridade ("Todas", "Baixa", "Média", "Alta"), e um botão "Selecionar Tags" que abre um diálogo com *checkboxes* para todas as tags únicas presentes na lista. A lógica em Python, implementada na classe `BoardList`, atualiza dinamicamente a visibilidade dos itens com base nas seleções combinadas. Por exemplo, selecionar "Concluídas" e a tag "escola" mostra apenas tarefas concluídas marcadas com "escola". Esta funcionalidade melhora a navegabilidade e permite uma gestão mais focada, sendo particularmente útil em cenários com grande volume de tarefas e diversas categorias.
 
-### 5. Melhoria da Interface das Listas com Modal e Cores por Prioridade
+### 5. Melhoria da Interface das Listas com Modal, Cores por Prioridade e Botão de Eliminação de Itens
 
-**Motivo da Inclusão**: A reformulação da interface das listas foi pensada para otimizar a experiência do utilizador, escondendo o formulário de criação num modal para reduzir desordem visual e usando cores para destacar prioridades, facilitando a identificação rápida de tarefas críticas. Além disso, é possível visualizar e editar os detalhes de um item clicando em cima do mesmo, o que abrirá um modal com mais informação acerca do item em questão.
+**Motivo da Inclusão**: A reformulação da interface das listas foi pensada para otimizar a experiência do utilizador, escondendo o formulário de criação num modal para reduzir desordem visual, usando cores para destacar prioridades e facilitando a identificação rápida de tarefas críticas, além de permitir a remoção direta de itens para maior controlo sobre as listas. Estas melhorias tornam a gestão de tarefas mais intuitiva e eficiente.
 
-**Descrição**: O botão "Criar Tarefa" em cada lista abre um modal com campos para nome, prioridade, descrição, tags e estado da tarefa. A criação só é concluída se o nome for preenchido, garantindo dados válidos. Após a criação, os itens exibem cores associadas à prioridade (verde, laranja ou vermelho), definidas na classe `Item`. Esta melhoria torna a interface mais limpa e intuitiva, enquanto as cores fornecem uma indicação visual imediata da urgência, alinhando-se com padrões de design modernos e práticos.
+**Descrição**: O botão "Criar Tarefa" em cada lista abre um modal com campos para nome, prioridade, descrição, tags e estado da tarefa, onde a criação só é concluída se o nome for preenchido, garantindo dados válidos. Após a criação, os itens exibem cores associadas à prioridade (verde, laranja ou vermelho), definidas na classe `Item`. Clicar num item abre um modal de edição com os detalhes, incluindo um botão "Excluir" que, ao ser clicado, apresenta um diálogo de confirmação para remover o item da lista, atualizando o `JSONStore` e exibindo uma mensagem de sucesso via `SnackBar`. Os títulos longos dos itens são cortados com reticências ("...") para manter a interface limpa, usando `ft.Text` com `max_lines=1` e `overflow=ft.TextOverflow.ELLIPSIS`. Esta melhoria torna a interface mais organizada, visualmente informativa e funcional, alinhando-se com padrões de design modernos.
 
 ### 6. Sistema de Autenticação com Registo de Utilizadores
 
@@ -60,17 +60,26 @@ Seguem-se as funcionalidades adicionais implementadas, com uma explicação dos 
 
 **Descrição**: No menu superior, a opção "Dark Mode" ou "Light Mode" permite alternar entre temas, com a escolha gravada no `client_storage` para persistência. O modo escuro usa tons como `GREY_900` para o fundo, enquanto o modo claro usa `BLUE_GREY_200`, atualizados pela função `update_theme_colors()`. Esta alteração é refletida na *appbar*, *sidebar* e listas em tempo real, oferecendo uma experiência visual adaptável às preferências do utilizador e às condições de iluminação.
 
+### 10. Sugestão Automática de Tags com NLP
+
+**Motivo da Inclusão**: A adição de sugestões automáticas de tags foi motivada pelo desejo de facilitar a categorização de tarefas, tornando o processo mais rápido e inteligente, especialmente para utilizadores que gerem muitas tarefas ou lidam com textos em diferentes idiomas.
+
+**Descrição**: Implementada na classe `Item`, esta funcionalidade usa a biblioteca spaCy com modelos NLP pré-treinados (`en_core_web_sm` para inglês e `pt_core_news_sm` para português) para sugerir tags a partir do título e descrição dos itens. A deteção de idioma é feita com `langdetect`, aplicando o modelo correspondente para extrair substantivos e entidades nomeadas (ex.: "Meeting with Maria" gera "meeting, maria"). No modal de edição, o botão "Sugerir Tags" adiciona até 5 tags ao campo de texto, exibindo uma notificação via `SnackBar` com o idioma detetado. Esta melhoria aumenta a produtividade e suporta multilingismo, destacando competências avançadas em NLP.
+
 ## Instruções de Utilização
 
 ### Requisitos
 - Python 3.8 ou superior.
 - Framework Flet: `pip install flet`.
+- Bibliotecas adicionais: `pip install spacy langdetect`.
+- Modelos spaCy: `python -m spacy download en_core_web_sm` e `python -m spacy download pt_core_news_sm`.
 
 **Uso**:
 - Navegue até `Trello/src/` e execute: `python main.py`.
 - Inicie a aplicação e faça *login* (ex.: "admin", senha "admin") ou registe um novo utilizador.
 - Crie *boards* e listas na vista "Boards".
 - Adicione tarefas com o botão "Create Task", definindo título, descrição, prioridade, tags (ex.: "trabalho, urgente") e estado.
+- Edite ou elimine itens clicando neles e usando os botões no modal (ex.: "Sugerir Tags" ou "Excluir").
 - Use os filtros nas listas para organizar tarefas por estado, prioridade ou tags (abra o diálogo de tags para selecionar múltiplas opções).
 - Altere o tema no menu superior.
 - Se *admin*, aceda a "Members" para gerir utilizadores.
