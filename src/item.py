@@ -3,6 +3,7 @@ import itertools
 import flet as ft
 from data_store import DataStore
 import spacy
+from spacy.cli import download
 from langdetect import detect
 
 if TYPE_CHECKING:
@@ -10,8 +11,22 @@ if TYPE_CHECKING:
 
 class Item(ft.Container):
     id_counter = itertools.count(start=1)
-    nlp_en = spacy.load("en_core_web_sm")
-    nlp_pt = spacy.load("pt_core_news_sm")
+
+    # Verifica e instala o modelo de inglês
+    try:
+        nlp_en = spacy.load("en_core_web_sm")
+    except OSError:
+        print("Baixando modelo 'en_core_web_sm'...")
+        download("en_core_web_sm")
+        nlp_en = spacy.load("en_core_web_sm")
+
+    # Verifica e instala o modelo de português
+    try:
+        nlp_pt = spacy.load("pt_core_news_sm")
+    except OSError:
+        print("Baixando modelo 'pt_core_news_sm'...")
+        download("pt_core_news_sm")
+        nlp_pt = spacy.load("pt_core_news_sm")
 
     def __init__(
         self,
