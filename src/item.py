@@ -199,7 +199,7 @@ class Item(ft.Container):
             text="Sugerir Tags",
             on_click=apply_suggested_tags,
             bgcolor=ft.Colors.BLUE_200,
-            color=ft.Colors.WHITE,
+            color=ft.Colors.BLACK,
             width=200,
         )
         delete_button = ft.ElevatedButton(
